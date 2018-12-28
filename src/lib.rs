@@ -1,7 +1,10 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+mod boolean;
+mod error;
+mod json;
+mod schema;
+mod validator;
+
+use self::validator::Validator;
+
+pub use self::boolean::boolean;
+pub use self::schema::OkSchema;
