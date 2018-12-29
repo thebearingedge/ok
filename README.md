@@ -1,4 +1,4 @@
 ok
 --
 
-Decent JSON Object schema validation.
+Alright JSON Object validation.
