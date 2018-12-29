@@ -4,19 +4,26 @@ use super::{
     OkSchema, Validator,
 };
 
-struct BooleanSchema {
+pub struct BooleanSchema {
     validator: Validator<bool>,
+    description: Option<&'static str>,
 }
 
 impl BooleanSchema {
     pub fn new() -> Self {
         BooleanSchema {
+            description: None,
             validator: Validator::new(JsonType::Boolean),
         }
     }
 }
 
 impl OkSchema for BooleanSchema {
+    fn desc(mut self, description: &'static str) -> Self {
+        self.description = Some(description);
+        self
+    }
+
     fn optional(mut self) -> Self {
         self.validator.is_optional = true;
         self
@@ -32,7 +39,7 @@ impl OkSchema for BooleanSchema {
     }
 }
 
-pub fn boolean() -> impl OkSchema {
+pub fn boolean() -> BooleanSchema {
     BooleanSchema::new()
 }
 

@@ -3,16 +3,15 @@ use super::{
     json::{from_json, to_json, Json, JsonType},
 };
 use serde::{de::DeserializeOwned, ser::Serialize};
-use std::fmt::Display;
 
-pub struct Validator<T: Display + DeserializeOwned + Serialize> {
+pub struct Validator<T: DeserializeOwned + Serialize> {
     json_type: JsonType,
     pub is_optional: bool,
     pub is_nullable: bool,
     pub validations: Vec<Box<Fn(&T) -> Result<Option<T>>>>,
 }
 
-impl<T: Display + DeserializeOwned + Serialize> Validator<T> {
+impl<T: DeserializeOwned + Serialize> Validator<T> {
     pub fn new(json_type: JsonType) -> Self {
         Validator {
             json_type,

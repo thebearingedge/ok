@@ -1,5 +1,7 @@
 use super::error::{self, Result};
-pub use serde_json::{from_value as from_json, to_value as to_json, Value as Json};
+pub use serde_json::{from_value as from_json, map::Map, to_value as to_json, Value as Json};
+
+pub type Object = Map<String, Json>;
 
 #[derive(Copy, Clone)]
 pub enum JsonType {
@@ -29,6 +31,12 @@ impl JsonType {
                     };
                 }
                 Err(error::type_error(JsonType::Boolean, (&Some(json)).into()))
+            }
+            JsonType::Object => {
+                if json.is_object() {
+                    return Ok(json);
+                }
+                Err(error::type_error(JsonType::Object, (&Some(json)).into()))
             }
             _ => Ok(from_json(json).unwrap()),
         }
