@@ -8,7 +8,7 @@ pub struct Validator<T: DeserializeOwned + Serialize> {
     json_type: JsonType,
     pub is_optional: bool,
     pub is_nullable: bool,
-    pub validations: Vec<Box<Fn(&T) -> Result<Option<T>>>>,
+    pub validations: Vec<fn(&T) -> Result<Option<T>>>,
 }
 
 impl<T: DeserializeOwned + Serialize> Validator<T> {
