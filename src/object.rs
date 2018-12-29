@@ -154,23 +154,26 @@ mod tests {
 
     #[test]
     fn it_validates_boolean_fields() {
-        let schema = object().boolean("foo", |foo| foo.desc("A Boolean value."));
+        let schema = object()
+            .boolean("foo", |field| field.desc("A Boolean value."))
+            .boolean("bar", |field| field.desc("Another Boolean value."));
 
         assert_eq!(
-            schema.validate(Some(json!({ "foo": true }))),
-            Ok(Some(json!({ "foo": true })))
+            schema.validate(Some(json!({ "foo": true, "bar": false }))),
+            Ok(Some(json!({ "foo": true, "bar": false })))
         );
         assert_eq!(
-            schema.validate(Some(json!({ "foo": "bar" }))),
+            schema.validate(Some(json!({ "foo": "bar", "baz": true }))),
             Err(error::object_error(hashmap! {
-                "foo".into() => error::type_error(JsonType::Boolean, JsonType::String)
+                "foo".into() => error::type_error(JsonType::Boolean, JsonType::String),
+                "bar".into() => error::type_error(JsonType::Boolean, JsonType::None)
             }))
-        )
+        );
     }
 
     #[test]
     fn it_validates_object_fields() {
-        let schema = object().object("foo", |foo| foo.desc("A nested Object."));
+        let schema = object().object("foo", |field| field.desc("A nested Object."));
 
         assert_eq!(
             schema.validate(Some(json!({ "foo": {} }))),
@@ -181,6 +184,6 @@ mod tests {
             Err(error::object_error(hashmap! {
                 "foo".into() => error::type_error(JsonType::Object, JsonType::Boolean)
             }))
-        )
+        );
     }
 }
