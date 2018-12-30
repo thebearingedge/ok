@@ -19,7 +19,7 @@ impl StringSchema {
     }
 
     pub fn length(mut self, (minimum, maximum): (usize, usize)) -> Self {
-        self.validator.append(Box::new(move |string| {
+        self.validator.append(move |string| {
             if string.len() >= minimum && string.len() <= maximum {
                 return Ok(None);
             }
@@ -27,12 +27,12 @@ impl StringSchema {
                 "Expected String with length between {} and {}.",
                 minimum, maximum
             )))
-        }));
+        });
         self
     }
 
     pub fn min_length(mut self, minimum: usize) -> Self {
-        self.validator.append(Box::new(move |string| {
+        self.validator.append(move |string| {
             if string.len() >= minimum {
                 return Ok(None);
             }
@@ -40,12 +40,12 @@ impl StringSchema {
                 "Expected String with length of at least {}.",
                 minimum
             )))
-        }));
+        });
         self
     }
 
     pub fn max_length(mut self, maximum: usize) -> Self {
-        self.validator.append(Box::new(move |string| {
+        self.validator.append(move |string| {
             if string.len() <= maximum {
                 return Ok(None);
             }
@@ -53,33 +53,31 @@ impl StringSchema {
                 "Expected String with length of at most {}.",
                 maximum
             )))
-        }));
+        });
         self
     }
 
     pub fn trim(mut self) -> Self {
         self.validator
-            .append(Box::new(|string| Ok(Some(string.trim().to_string()))));
+            .append(|string| Ok(Some(string.trim().to_string())));
         self
     }
 
     pub fn uppercase(mut self) -> Self {
-        self.validator.append(Box::new(|string| {
-            Ok(Some(string.to_uppercase().to_string()))
-        }));
+        self.validator
+            .append(|string| Ok(Some(string.to_uppercase().to_string())));
         self
     }
 
     pub fn lowercase(mut self) -> Self {
-        self.validator.append(Box::new(|string| {
-            Ok(Some(string.to_lowercase().to_string()))
-        }));
+        self.validator
+            .append(|string| Ok(Some(string.to_lowercase().to_string())));
         self
     }
 
     pub fn pattern(mut self, pattern: &'static str) -> Self {
         let regex = Regex::new(pattern).unwrap();
-        self.validator.append(Box::new(move |string| {
+        self.validator.append(move |string| {
             if regex.is_match(string) {
                 return Ok(None);
             }
@@ -87,12 +85,12 @@ impl StringSchema {
                 "Expected String to match pattern '{}'.",
                 regex.as_str()
             )))
-        }));
+        });
         self
     }
 
     pub fn regex(mut self, regex: Regex) -> Self {
-        self.validator.append(Box::new(move |string| {
+        self.validator.append(move |string| {
             if regex.is_match(string) {
                 return Ok(None);
             }
@@ -100,7 +98,7 @@ impl StringSchema {
                 "Expected String to match pattern '{}'.",
                 regex.as_str()
             )))
-        }));
+        });
         self
     }
 }

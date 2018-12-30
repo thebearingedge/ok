@@ -21,8 +21,11 @@ impl<T: DeserializeOwned + Serialize> Validator<T> {
         }
     }
 
-    pub fn append(&mut self, validation: Box<Fn(&T) -> Result<Option<T>>>) {
-        self.validations.push(validation);
+    pub fn append<V>(&mut self, validation: V)
+    where
+        V: Fn(&T) -> Result<Option<T>> + 'static,
+    {
+        self.validations.push(Box::new(validation));
     }
 
     pub fn exec(&self, value: Option<Json>) -> Result<Option<Json>> {

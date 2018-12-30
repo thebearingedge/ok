@@ -29,7 +29,7 @@ impl<N: Number> NumberSchema<N> {
         N: 'static,
     {
         let json_type = self.validator.json_type;
-        self.validator.append(Box::new(move |number| {
+        self.validator.append(move |number| {
             if number >= &minimum {
                 return Ok(None);
             }
@@ -37,7 +37,7 @@ impl<N: Number> NumberSchema<N> {
                 "Expected {} value of at least {}.",
                 json_type, minimum
             )))
-        }));
+        });
         self
     }
 
@@ -46,7 +46,7 @@ impl<N: Number> NumberSchema<N> {
         N: 'static,
     {
         let json_type = self.validator.json_type;
-        self.validator.append(Box::new(move |number| {
+        self.validator.append(move |number| {
             if number <= &maximum {
                 return Ok(None);
             }
@@ -54,7 +54,7 @@ impl<N: Number> NumberSchema<N> {
                 "Expected {} value of at most {}.",
                 json_type, maximum
             )))
-        }));
+        });
         self
     }
 
@@ -63,7 +63,7 @@ impl<N: Number> NumberSchema<N> {
         N: 'static,
     {
         let json_type = self.validator.json_type;
-        self.validator.append(Box::new(move |number| {
+        self.validator.append(move |number| {
             if number > &limit {
                 return Ok(None);
             }
@@ -71,7 +71,7 @@ impl<N: Number> NumberSchema<N> {
                 "Expected {} value greater than {}.",
                 json_type, limit
             )))
-        }));
+        });
         self
     }
 
@@ -80,7 +80,7 @@ impl<N: Number> NumberSchema<N> {
         N: 'static,
     {
         let json_type = self.validator.json_type;
-        self.validator.append(Box::new(move |number| {
+        self.validator.append(move |number| {
             if number < &limit {
                 return Ok(None);
             }
@@ -88,7 +88,7 @@ impl<N: Number> NumberSchema<N> {
                 "Expected {} value less than {}.",
                 json_type, limit
             )))
-        }));
+        });
         self
     }
 }
