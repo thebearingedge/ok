@@ -11,7 +11,7 @@ use std::collections::HashMap;
 pub struct ObjectSchema {
     description: Option<&'static str>,
     validator: Validator<Object>,
-    fields: HashMap<String, Box<OkSchema>>,
+    field_schemas: HashMap<String, Box<OkSchema>>,
 }
 
 impl ObjectSchema {
@@ -19,7 +19,7 @@ impl ObjectSchema {
         ObjectSchema {
             description: None,
             validator: Validator::new(JsonType::Object),
-            fields: HashMap::new(),
+            field_schemas: HashMap::new(),
         }
     }
 
@@ -29,7 +29,8 @@ impl ObjectSchema {
         builder: fn(BooleanSchema) -> BooleanSchema,
     ) -> Self {
         let schema = BooleanSchema::new();
-        self.fields.insert(key.into(), Box::new(builder(schema)));
+        self.field_schemas
+            .insert(key.into(), Box::new(builder(schema)));
         self
     }
 
@@ -39,7 +40,8 @@ impl ObjectSchema {
         builder: fn(NumberSchema<i64>) -> NumberSchema<i64>,
     ) -> Self {
         let schema = NumberSchema::new(JsonType::Integer);
-        self.fields.insert(key.into(), Box::new(builder(schema)));
+        self.field_schemas
+            .insert(key.into(), Box::new(builder(schema)));
         self
     }
 
@@ -49,7 +51,8 @@ impl ObjectSchema {
         builder: fn(NumberSchema<f64>) -> NumberSchema<f64>,
     ) -> Self {
         let schema = NumberSchema::new(JsonType::Float);
-        self.fields.insert(key.into(), Box::new(builder(schema)));
+        self.field_schemas
+            .insert(key.into(), Box::new(builder(schema)));
         self
     }
 
@@ -59,7 +62,8 @@ impl ObjectSchema {
         builder: fn(NumberSchema<u64>) -> NumberSchema<u64>,
     ) -> Self {
         let schema = NumberSchema::new(JsonType::Unsigned);
-        self.fields.insert(key.into(), Box::new(builder(schema)));
+        self.field_schemas
+            .insert(key.into(), Box::new(builder(schema)));
         self
     }
 
@@ -69,7 +73,8 @@ impl ObjectSchema {
         builder: fn(StringSchema) -> StringSchema,
     ) -> Self {
         let schema = StringSchema::new();
-        self.fields.insert(key.into(), Box::new(builder(schema)));
+        self.field_schemas
+            .insert(key.into(), Box::new(builder(schema)));
         self
     }
 
@@ -79,7 +84,8 @@ impl ObjectSchema {
         builder: fn(ObjectSchema) -> ObjectSchema,
     ) -> Self {
         let schema = ObjectSchema::new();
-        self.fields.insert(key.into(), Box::new(builder(schema)));
+        self.field_schemas
+            .insert(key.into(), Box::new(builder(schema)));
         self
     }
 }
@@ -102,37 +108,31 @@ impl OkSchema for ObjectSchema {
 
     fn validate(&self, value: Option<Json>) -> Result<Option<Json>> {
         let validated = self.validator.exec(value)?;
-
-        if validated.is_none() {
-            return Ok(validated);
-        }
-
-        let mut json = validated.unwrap();
-
-        if json.is_null() {
-            return Ok(Some(json));
-        }
-
+        let mut fields = match validated {
+            None => return Ok(None),
+            Some(json) => match json {
+                Json::Object(fields) => fields,
+                _ => return Ok(Some(json)),
+            },
+        };
         let mut object = Object::new();
         let mut errors = HashMap::new();
-        let values = json.as_object_mut().unwrap();
-
-        self.fields.iter().for_each(|(key, schema)| {
-            match schema.validate(values.remove(key)) {
+        self.field_schemas.iter().for_each(|(key, schema)| {
+            match schema.validate(fields.remove(key)) {
                 Ok(None) => (),
                 Ok(Some(value)) => {
-                    object.insert(key.to_string(), value);
+                    if errors.is_empty() {
+                        object.insert(key.to_string(), value);
+                    }
                 }
                 Err(error) => {
                     errors.insert(key.to_string(), error);
                 }
             };
         });
-
         if errors.is_empty() {
             return Ok(Some(object.into()));
         }
-
         Err(error::object_error(errors))
     }
 }

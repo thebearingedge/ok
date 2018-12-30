@@ -101,7 +101,11 @@ impl OkSchema for ArraySchema {
             .enumerate()
             .for_each(|(index, element)| {
                 match element_schema.validate(Some(element)) {
-                    Ok(valid) => array.push(valid.unwrap()),
+                    Ok(value) => {
+                        if errors.is_empty() {
+                            array.push(value.unwrap());
+                        }
+                    }
                     Err(error) => {
                         errors.insert(index, error);
                     }
