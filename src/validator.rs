@@ -5,10 +5,10 @@ use super::{
 use serde::{de::DeserializeOwned, ser::Serialize};
 
 pub struct Validator<T: DeserializeOwned + Serialize> {
-    json_type: JsonType,
+    pub json_type: JsonType,
     pub is_optional: bool,
     pub is_nullable: bool,
-    pub validations: Vec<fn(&T) -> Result<Option<T>>>,
+    pub validations: Vec<Box<Fn(&T) -> Result<Option<T>>>>,
 }
 
 impl<T: DeserializeOwned + Serialize> Validator<T> {
@@ -19,6 +19,10 @@ impl<T: DeserializeOwned + Serialize> Validator<T> {
             is_nullable: false,
             validations: vec![],
         }
+    }
+
+    pub fn append(&mut self, validation: Box<Fn(&T) -> Result<Option<T>>>) {
+        self.validations.push(validation);
     }
 
     pub fn exec(&self, value: Option<Json>) -> Result<Option<Json>> {

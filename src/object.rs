@@ -2,6 +2,7 @@ use super::{
     boolean::BooleanSchema,
     error::{self, Result},
     json::{Json, JsonType, Object},
+    number::NumberSchema,
     OkSchema, Validator,
 };
 use std::collections::HashMap;
@@ -27,6 +28,36 @@ impl ObjectSchema {
         builder: fn(BooleanSchema) -> BooleanSchema,
     ) -> Self {
         let schema = BooleanSchema::new();
+        self.fields.insert(key.into(), Box::new(builder(schema)));
+        self
+    }
+
+    pub fn integer<K: Into<String>>(
+        mut self,
+        key: K,
+        builder: fn(NumberSchema<i64>) -> NumberSchema<i64>,
+    ) -> Self {
+        let schema = NumberSchema::new(JsonType::Integer);
+        self.fields.insert(key.into(), Box::new(builder(schema)));
+        self
+    }
+
+    pub fn float<K: Into<String>>(
+        mut self,
+        key: K,
+        builder: fn(NumberSchema<f64>) -> NumberSchema<f64>,
+    ) -> Self {
+        let schema = NumberSchema::new(JsonType::Float);
+        self.fields.insert(key.into(), Box::new(builder(schema)));
+        self
+    }
+
+    pub fn unsigned<K: Into<String>>(
+        mut self,
+        key: K,
+        builder: fn(NumberSchema<u64>) -> NumberSchema<u64>,
+    ) -> Self {
+        let schema = NumberSchema::new(JsonType::Unsigned);
         self.fields.insert(key.into(), Box::new(builder(schema)));
         self
     }
@@ -167,6 +198,27 @@ mod tests {
             Err(error::object_error(hashmap! {
                 "foo".into() => error::type_error(JsonType::Boolean, JsonType::String),
                 "bar".into() => error::type_error(JsonType::Boolean, JsonType::None)
+            }))
+        );
+    }
+
+    #[test]
+    fn it_validates_number_fields() {
+        let schema = object()
+            .integer("foo", |field| field.desc("An integer."))
+            .float("bar", |field| field.desc("A float."))
+            .unsigned("baz", |field| field.desc("An unsigned."));
+
+        assert_eq!(
+            schema.validate(Some(json!({ "foo": 1, "bar": 2.0, "baz": 3 }))),
+            Ok(Some(json!({ "foo": 1, "bar": 2.0, "baz": 3 })))
+        );
+        assert_eq!(
+            schema.validate(Some(json!({ "foo": "", "baz": null }))),
+            Err(error::object_error(hashmap! {
+                "foo".into() => error::type_error(JsonType::Integer, JsonType::String),
+                "bar".into() => error::type_error(JsonType::Float, JsonType::None),
+                "baz".into() => error::type_error(JsonType::Unsigned, JsonType::Null)
             }))
         );
     }
