@@ -108,6 +108,9 @@ impl OkSchema for ObjectSchema {
 
     fn validate(&self, value: Option<Json>) -> Result<Option<Json>> {
         let validated = self.validator.exec(value)?;
+        if self.field_schemas.is_empty() {
+            return Ok(validated);
+        }
         let mut fields = match validated {
             None => return Ok(None),
             Some(json) => match json {
