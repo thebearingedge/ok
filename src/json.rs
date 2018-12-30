@@ -5,6 +5,8 @@ pub use serde_json::{
 
 pub type Object = Map<String, Json>;
 
+pub type Array = Vec<Json>;
+
 #[derive(Copy, Clone)]
 pub enum JsonType {
     Array,
