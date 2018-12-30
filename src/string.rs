@@ -1,5 +1,5 @@
 use super::{
-    error::Result,
+    error::{self, Result},
     json::{Json, JsonType},
     OkSchema, Validator,
 };
@@ -15,6 +15,65 @@ impl StringSchema {
             description: None,
             validator: Validator::new(JsonType::String),
         }
+    }
+
+    pub fn length(mut self, (minimum, maximum): (usize, usize)) -> Self {
+        self.validator.append(Box::new(move |string| {
+            if string.len() >= minimum && string.len() <= maximum {
+                return Ok(None);
+            }
+            Err(error::value_error(format!(
+                "Expected String with length between {} and {}.",
+                minimum, maximum
+            )))
+        }));
+        self
+    }
+
+    pub fn min_length(mut self, minimum: usize) -> Self {
+        self.validator.append(Box::new(move |string| {
+            if string.len() >= minimum {
+                return Ok(None);
+            }
+            Err(error::value_error(format!(
+                "Expected String with length of at least {}.",
+                minimum
+            )))
+        }));
+        self
+    }
+
+    pub fn max_length(mut self, maximum: usize) -> Self {
+        self.validator.append(Box::new(move |string| {
+            if string.len() <= maximum {
+                return Ok(None);
+            }
+            Err(error::value_error(format!(
+                "Expected String with length of at most {}.",
+                maximum
+            )))
+        }));
+        self
+    }
+
+    pub fn trim(mut self) -> Self {
+        self.validator
+            .append(Box::new(|string| Ok(Some(string.trim().to_string()))));
+        self
+    }
+
+    pub fn uppercase(mut self) -> Self {
+        self.validator.append(Box::new(|string| {
+            Ok(Some(string.to_uppercase().to_string()))
+        }));
+        self
+    }
+
+    pub fn lowercase(mut self) -> Self {
+        self.validator.append(Box::new(|string| {
+            Ok(Some(string.to_lowercase().to_string()))
+        }));
+        self
     }
 }
 
@@ -87,4 +146,77 @@ mod tests {
         assert_eq!(schema.validate(Some(json!("foo"))), Ok(Some(json!("foo"))));
         assert_eq!(schema.validate(Some(json!(null))), Ok(Some(json!(null))));
     }
+
+    #[test]
+    fn it_sets_a_minimum_and_maximum_length() {
+        let schema = string().length((1, 3));
+
+        assert_eq!(schema.validate(Some(json!("foo"))), Ok(Some(json!("foo"))));
+        assert_eq!(
+            schema.validate(Some(json!(""))),
+            Err(error::field_error(vec![error::value_error(
+                "Expected String with length between 1 and 3."
+            )]))
+        );
+        assert_eq!(
+            schema.validate(Some(json!("quux"))),
+            Err(error::field_error(vec![error::value_error(
+                "Expected String with length between 1 and 3."
+            )]))
+        );
+    }
+
+    #[test]
+    fn it_sets_a_minimum_length() {
+        let schema = string().min_length(4);
+
+        assert_eq!(
+            schema.validate(Some(json!("quux"))),
+            Ok(Some(json!("quux")))
+        );
+        assert_eq!(
+            schema.validate(Some(json!("qux"))),
+            Err(error::field_error(vec![error::value_error(
+                "Expected String with length of at least 4."
+            )]))
+        );
+    }
+
+    #[test]
+    fn it_sets_a_maximum_length() {
+        let schema = string().max_length(3);
+
+        assert_eq!(schema.validate(Some(json!("qux"))), Ok(Some(json!("qux"))));
+        assert_eq!(
+            schema.validate(Some(json!("quux"))),
+            Err(error::field_error(vec![error::value_error(
+                "Expected String with length of at most 3."
+            )]))
+        );
+    }
+
+    #[test]
+    fn it_trims_strings() {
+        let schema = string().trim();
+
+        assert_eq!(
+            schema.validate(Some(json!("  foo  "))),
+            Ok(Some(json!("foo")))
+        );
+    }
+
+    #[test]
+    fn it_uppercases_strings() {
+        let schema = string().uppercase();
+
+        assert_eq!(schema.validate(Some(json!("foo"))), Ok(Some(json!("FOO"))));
+    }
+
+    #[test]
+    fn it_lowercases_strings() {
+        let schema = string().lowercase();
+
+        assert_eq!(schema.validate(Some(json!("FOO"))), Ok(Some(json!("foo"))));
+    }
+
 }

@@ -127,6 +127,21 @@ impl JsonType {
             _ => Ok(json),
         }
     }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            JsonType::Array => "Array",
+            JsonType::Boolean => "Boolean",
+            JsonType::Float => "Float",
+            JsonType::Integer => "Integer",
+            JsonType::None => "none",
+            JsonType::Null => "null",
+            JsonType::Number => "Number",
+            JsonType::Object => "Object",
+            JsonType::String => "String",
+            JsonType::Unsigned => "Unsigned Integer",
+        }
+    }
 }
 
 impl From<&Option<Json>> for JsonType {
@@ -147,17 +162,6 @@ impl From<&Option<Json>> for JsonType {
 
 impl std::fmt::Display for JsonType {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::result::Result<(), std::fmt::Error> {
-        match self {
-            JsonType::Array => write!(f, "Array"),
-            JsonType::Boolean => write!(f, "Boolean"),
-            JsonType::Float => write!(f, "Float"),
-            JsonType::Integer => write!(f, "Integer"),
-            JsonType::None => write!(f, "none"),
-            JsonType::Null => write!(f, "null"),
-            JsonType::Number => write!(f, "Number"),
-            JsonType::Object => write!(f, "Object"),
-            JsonType::String => write!(f, "String"),
-            JsonType::Unsigned => write!(f, "Unsigned Integer"),
-        }
+        write!(f, "{}", self.as_str())
     }
 }
