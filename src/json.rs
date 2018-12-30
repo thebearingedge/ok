@@ -14,6 +14,7 @@ pub enum JsonType {
     Number,
     Object,
     String,
+    Unsigned,
 }
 
 impl JsonType {
@@ -21,7 +22,7 @@ impl JsonType {
         match self {
             JsonType::Boolean => {
                 if json.is_boolean() {
-                    return Ok(from_json(json).unwrap());
+                    return Ok(json);
                 }
                 if json.is_string() {
                     return match json.as_str().unwrap() {
@@ -38,7 +39,81 @@ impl JsonType {
                 }
                 Err(error::type_error(JsonType::Object, (&Some(json)).into()))
             }
-            _ => Ok(from_json(json).unwrap()),
+            JsonType::Integer => {
+                if json.is_i64() {
+                    return Ok(json);
+                }
+                if json.is_f64() {
+                    let float = json.as_f64().unwrap();
+                    if float.fract() == 0.0 {
+                        return Ok(to_json::<i64>(float as i64).unwrap());
+                    }
+                    return Err(error::type_error(JsonType::Integer, JsonType::Float));
+                }
+                if json.is_u64() {
+                    let unsigned = json.as_u64().unwrap();
+                    if unsigned <= std::i64::MAX as u64 {
+                        return Ok(json);
+                    }
+                    return Err(error::type_error(JsonType::Integer, JsonType::Unsigned));
+                }
+                if json.is_string() {
+                    let string = json.as_str().unwrap();
+                    return match string.parse::<i64>() {
+                        Ok(integer) => Ok(to_json(integer).unwrap()),
+                        Err(_) => Err(error::type_error(JsonType::Integer, JsonType::String)),
+                    };
+                }
+                Err(error::type_error(JsonType::Integer, (&Some(json)).into()))
+            }
+            JsonType::Unsigned => {
+                if json.is_u64() {
+                    return Ok(json);
+                }
+                if json.is_f64() {
+                    let float = json.as_f64().unwrap();
+                    if float >= 0.0 && float.fract() == 0.0 {
+                        return Ok(to_json::<u64>(float as u64).unwrap());
+                    }
+                    return Err(error::type_error(JsonType::Unsigned, JsonType::Float));
+                }
+                if json.is_i64() {
+                    let integer = json.as_i64().unwrap();
+                    if integer >= 0 {
+                        return Ok(to_json::<u64>(integer as u64).unwrap());
+                    }
+                    return Err(error::type_error(JsonType::Unsigned, JsonType::Integer));
+                }
+                if json.is_string() {
+                    let string = json.as_str().unwrap();
+                    return match string.parse::<u64>() {
+                        Ok(unsigned) => Ok(to_json(unsigned).unwrap()),
+                        Err(_) => Err(error::type_error(JsonType::Unsigned, JsonType::String)),
+                    };
+                }
+                Err(error::type_error(JsonType::Unsigned, (&Some(json)).into()))
+            }
+            JsonType::Float => {
+                if json.is_f64() || json.is_i64() {
+                    return Ok(json);
+                }
+                if json.is_u64() {
+                    let unsigned = json.as_u64().unwrap();
+                    if unsigned <= std::f64::MAX as u64 {
+                        return Ok(to_json::<f64>(unsigned as f64).unwrap());
+                    }
+                    return Err(error::type_error(JsonType::Float, JsonType::Unsigned));
+                }
+                if json.is_string() {
+                    let string = json.as_str().unwrap();
+                    return match string.parse::<f64>() {
+                        Ok(float) => Ok(to_json(float).unwrap()),
+                        Err(_) => Err(error::type_error(JsonType::Float, JsonType::String)),
+                    };
+                }
+                Err(error::type_error(JsonType::Float, (&Some(json)).into()))
+            }
+            _ => Ok(json),
         }
     }
 }
@@ -71,6 +146,7 @@ impl std::fmt::Display for JsonType {
             JsonType::Number => write!(f, "Number"),
             JsonType::Object => write!(f, "Object"),
             JsonType::String => write!(f, "String"),
+            JsonType::Unsigned => write!(f, "Unsigned Integer"),
         }
     }
 }
