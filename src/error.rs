@@ -7,6 +7,7 @@ pub enum ValidationError {
     Value(String),
     Field(Vec<ValidationError>),
     Object(HashMap<String, ValidationError>),
+    Array(HashMap<usize, ValidationError>),
 }
 
 pub type Result<T> = std::result::Result<T, ValidationError>;
@@ -25,4 +26,8 @@ pub fn field_error(errors: Vec<ValidationError>) -> ValidationError {
 
 pub fn object_error(field_errors: HashMap<String, ValidationError>) -> ValidationError {
     ValidationError::Object(field_errors)
+}
+
+pub fn array_error(field_errors: HashMap<usize, ValidationError>) -> ValidationError {
+    ValidationError::Array(field_errors)
 }
