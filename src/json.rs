@@ -1,5 +1,7 @@
 use super::error::{self, Result};
-pub use serde_json::{from_value as from_json, map::Map, to_value as to_json, Value as Json};
+pub use serde_json::{
+    from_value as from_json, map::Map, to_string, to_value as to_json, Value as Json,
+};
 
 pub type Object = Map<String, Json>;
 
@@ -112,6 +114,15 @@ impl JsonType {
                     };
                 }
                 Err(error::type_error(JsonType::Float, (&Some(json)).into()))
+            }
+            JsonType::String => {
+                if json.is_string() {
+                    return Ok(json);
+                }
+                if json.is_boolean() || json.is_number() {
+                    return Ok(to_json(json.to_string()).unwrap());
+                }
+                Err(error::type_error(JsonType::String, (&Some(json)).into()))
             }
             _ => Ok(json),
         }
