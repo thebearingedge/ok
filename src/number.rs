@@ -5,18 +5,18 @@ use super::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
-pub struct NumberSchema<N>
-where
-    N: Serialize + DeserializeOwned + PartialOrd + std::fmt::Display,
-{
+pub trait Number: Serialize + DeserializeOwned + PartialOrd + std::fmt::Display {}
+
+impl Number for i64 {}
+impl Number for u64 {}
+impl Number for f64 {}
+
+pub struct NumberSchema<N: Number> {
     validator: Validator<N>,
     description: Option<&'static str>,
 }
 
-impl<N> NumberSchema<N>
-where
-    N: Serialize + DeserializeOwned + PartialOrd + std::fmt::Display,
-{
+impl<N: Number> NumberSchema<N> {
     pub fn new(json_type: JsonType) -> Self {
         NumberSchema {
             description: None,
@@ -93,10 +93,7 @@ where
     }
 }
 
-impl<N> OkSchema for NumberSchema<N>
-where
-    N: Serialize + DeserializeOwned + PartialOrd + std::fmt::Display,
-{
+impl<N: Number> OkSchema for NumberSchema<N> {
     fn desc(mut self, description: &'static str) -> Self {
         self.description = Some(description);
         self
