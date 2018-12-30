@@ -3,6 +3,7 @@ use super::{
     json::{Json, JsonType},
     OkSchema, Validator,
 };
+use regex::Regex;
 
 pub struct StringSchema {
     validator: Validator<String>,
@@ -75,6 +76,33 @@ impl StringSchema {
         }));
         self
     }
+
+    pub fn pattern(mut self, pattern: &'static str) -> Self {
+        let regex = Regex::new(pattern).unwrap();
+        self.validator.append(Box::new(move |string| {
+            if regex.is_match(string) {
+                return Ok(None);
+            }
+            Err(error::value_error(format!(
+                "Expected String to match pattern '{}'.",
+                regex.as_str()
+            )))
+        }));
+        self
+    }
+
+    pub fn regex(mut self, regex: Regex) -> Self {
+        self.validator.append(Box::new(move |string| {
+            if regex.is_match(string) {
+                return Ok(None);
+            }
+            Err(error::value_error(format!(
+                "Expected String to match pattern '{}'.",
+                regex.as_str()
+            )))
+        }));
+        self
+    }
 }
 
 impl OkSchema for StringSchema {
@@ -102,8 +130,10 @@ pub fn string() -> StringSchema {
     StringSchema::new()
 }
 
+#[cfg(test)]
 mod tests {
     use super::super::{error, json::JsonType, string, OkSchema};
+    use regex::RegexBuilder;
     use serde_json::json;
 
     #[test]
@@ -219,4 +249,38 @@ mod tests {
         assert_eq!(schema.validate(Some(json!("FOO"))), Ok(Some(json!("foo"))));
     }
 
+    #[test]
+    fn it_sets_a_regex_pattern() {
+        let schema = string().pattern("(?i)^foo");
+
+        assert_eq!(
+            schema.validate(Some(json!("Foobar"))),
+            Ok(Some(json!("Foobar")))
+        );
+
+        assert_eq!(
+            schema.validate(Some(json!("Barfoo"))),
+            Err(error::field_error(vec![error::value_error(
+                "Expected String to match pattern '(?i)^foo'."
+            )]))
+        )
+    }
+
+    #[test]
+    fn it_sets_a_regex_object() {
+        let regex = RegexBuilder::new("(?i)^foo").build().unwrap();
+        let schema = string().regex(regex);
+
+        assert_eq!(
+            schema.validate(Some(json!("Foobar"))),
+            Ok(Some(json!("Foobar")))
+        );
+
+        assert_eq!(
+            schema.validate(Some(json!("Barfoo"))),
+            Err(error::field_error(vec![error::value_error(
+                "Expected String to match pattern '(?i)^foo'."
+            )]))
+        )
+    }
 }

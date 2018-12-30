@@ -3,6 +3,7 @@ use super::{
     error::{self, Result},
     json::{Json, JsonType, Object},
     number::NumberSchema,
+    string::StringSchema,
     OkSchema, Validator,
 };
 use std::collections::HashMap;
@@ -58,6 +59,16 @@ impl ObjectSchema {
         builder: fn(NumberSchema<u64>) -> NumberSchema<u64>,
     ) -> Self {
         let schema = NumberSchema::new(JsonType::Unsigned);
+        self.fields.insert(key.into(), Box::new(builder(schema)));
+        self
+    }
+
+    pub fn string<K: Into<String>>(
+        mut self,
+        key: K,
+        builder: fn(StringSchema) -> StringSchema,
+    ) -> Self {
+        let schema = StringSchema::new();
         self.fields.insert(key.into(), Box::new(builder(schema)));
         self
     }
@@ -219,6 +230,25 @@ mod tests {
                 "foo".into() => error::type_error(JsonType::Integer, JsonType::String),
                 "bar".into() => error::type_error(JsonType::Float, JsonType::None),
                 "baz".into() => error::type_error(JsonType::Unsigned, JsonType::Null)
+            }))
+        );
+    }
+
+    #[test]
+    fn it_validates_string_fields() {
+        let schema = object()
+            .string("foo", |field| field.desc("A String value."))
+            .string("baz", |field| field.desc("Another String value."));
+
+        assert_eq!(
+            schema.validate(Some(json!({ "foo": "bar", "baz": "qux" }))),
+            Ok(Some(json!({ "foo": "bar", "baz": "qux" })))
+        );
+        assert_eq!(
+            schema.validate(Some(json!({ "foo": null, "baz": [] }))),
+            Err(error::object_error(hashmap! {
+                "foo".into() => error::type_error(JsonType::String, JsonType::Null),
+                "baz".into() => error::type_error(JsonType::String, JsonType::Array)
             }))
         );
     }
