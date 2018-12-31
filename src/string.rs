@@ -1,5 +1,5 @@
 use super::{
-    error::{self, Result},
+    error::Result,
     json::{Json, JsonType},
     OkSchema, Validator,
 };
@@ -18,86 +18,62 @@ impl StringSchema {
         }
     }
 
-    pub fn length(mut self, (minimum, maximum): (usize, usize)) -> Self {
-        self.validator.test(move |string| {
-            if string.len() >= minimum && string.len() <= maximum {
-                return Ok(());
-            }
-            Err(error::value_error(format!(
-                "Expected String with length between {} and {}.",
-                minimum, maximum
-            )))
-        });
+    pub fn length(mut self, (min, max): (usize, usize)) -> Self {
+        self.validator.add_test(
+            format!("Expected String with length between {} and {}.", min, max),
+            move |string| Ok(string.len() >= min && string.len() <= max),
+        );
         self
     }
 
-    pub fn min_length(mut self, minimum: usize) -> Self {
-        self.validator.test(move |string| {
-            if string.len() >= minimum {
-                return Ok(());
-            }
-            Err(error::value_error(format!(
-                "Expected String with length of at least {}.",
-                minimum
-            )))
-        });
+    pub fn min_length(mut self, min: usize) -> Self {
+        self.validator.add_test(
+            format!("Expected String with length of at least {}.", min),
+            move |string| Ok(string.len() >= min),
+        );
         self
     }
 
-    pub fn max_length(mut self, maximum: usize) -> Self {
-        self.validator.test(move |string| {
-            if string.len() <= maximum {
-                return Ok(());
-            }
-            Err(error::value_error(format!(
-                "Expected String with length of at most {}.",
-                maximum
-            )))
-        });
+    pub fn max_length(mut self, max: usize) -> Self {
+        self.validator.add_test(
+            format!("Expected String with length of at most {}.", max),
+            move |string| Ok(string.len() <= max),
+        );
         self
     }
 
     pub fn trim(mut self) -> Self {
-        self.validator.transform(|string| string.trim().to_string());
+        self.validator
+            .add_transform(|string| string.trim().to_string());
         self
     }
 
     pub fn uppercase(mut self) -> Self {
         self.validator
-            .transform(|string| string.to_uppercase().to_string());
+            .add_transform(|string| string.to_uppercase().to_string());
         self
     }
 
     pub fn lowercase(mut self) -> Self {
         self.validator
-            .transform(|string| string.to_lowercase().to_string());
+            .add_transform(|string| string.to_lowercase().to_string());
         self
     }
 
     pub fn pattern(mut self, pattern: &str) -> Self {
         let regex = Regex::new(pattern).unwrap();
-        self.validator.test(move |string| {
-            if regex.is_match(string) {
-                return Ok(());
-            }
-            Err(error::value_error(format!(
-                "Expected String to match pattern '{}'.",
-                regex.as_str()
-            )))
-        });
+        self.validator.add_test(
+            format!("Expected String to match pattern '{}'.", regex.as_str()),
+            move |string| Ok(regex.is_match(string)),
+        );
         self
     }
 
     pub fn regex(mut self, regex: Regex) -> Self {
-        self.validator.test(move |string| {
-            if regex.is_match(string) {
-                return Ok(());
-            }
-            Err(error::value_error(format!(
-                "Expected String to match pattern '{}'.",
-                regex.as_str()
-            )))
-        });
+        self.validator.add_test(
+            format!("Expected String to match pattern '{}'.", regex.as_str()),
+            move |string| Ok(regex.is_match(string)),
+        );
         self
     }
 }
@@ -177,13 +153,13 @@ mod tests {
         assert_eq!(schema.validate(Some(json!("foo"))), Ok(Some(json!("foo"))));
         assert_eq!(
             schema.validate(Some(json!(""))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected String with length between 1 and 3."
             )]))
         );
         assert_eq!(
             schema.validate(Some(json!("quux"))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected String with length between 1 and 3."
             )]))
         );
@@ -198,7 +174,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!("qux"))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected String with length of at least 4."
             )]))
         );
@@ -210,7 +186,7 @@ mod tests {
         assert_eq!(schema.validate(Some(json!("qux"))), Ok(Some(json!("qux"))));
         assert_eq!(
             schema.validate(Some(json!("quux"))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected String with length of at most 3."
             )]))
         );
@@ -246,7 +222,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!("Barfoo"))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected String to match pattern '(?i)^foo'."
             )]))
         )
@@ -262,7 +238,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!("Barfoo"))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected String to match pattern '(?i)^foo'."
             )]))
         )

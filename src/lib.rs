@@ -6,8 +6,10 @@ mod number;
 mod object;
 mod schema;
 mod string;
+mod test;
 mod validator;
 
+use self::test::Test;
 use self::validator::Validator;
 
 pub use self::{

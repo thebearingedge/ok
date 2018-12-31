@@ -1,6 +1,7 @@
 use super::{
     error::{self, Result, ValidationError},
     json::{from_json, to_json, Json, JsonType},
+    Test,
 };
 use serde::{de::DeserializeOwned, ser::Serialize};
 
@@ -8,7 +9,7 @@ pub struct Validator<T: DeserializeOwned + Serialize> {
     pub json_type: JsonType,
     pub is_optional: bool,
     pub is_nullable: bool,
-    pub tests: Vec<Box<Fn(&T) -> Result<()>>>,
+    pub tests: Vec<Test<T>>,
     pub transforms: Vec<fn(T) -> T>,
 }
 
@@ -23,11 +24,15 @@ impl<T: DeserializeOwned + Serialize> Validator<T> {
         }
     }
 
-    pub fn test<V: Fn(&T) -> Result<()> + 'static>(&mut self, test: V) {
-        self.tests.push(Box::new(test));
+    pub fn add_test<M, V>(&mut self, message: M, test: V)
+    where
+        M: Into<String>,
+        V: Fn(&T) -> Result<bool> + 'static,
+    {
+        self.tests.push(Test::new(message, test));
     }
 
-    pub fn transform(&mut self, transform: fn(T) -> T) {
+    pub fn add_transform(&mut self, transform: fn(T) -> T) {
         self.transforms.push(transform);
     }
 
@@ -51,7 +56,7 @@ impl<T: DeserializeOwned + Serialize> Validator<T> {
         let errors = self
             .tests
             .iter()
-            .filter_map(|test| test(&t).err())
+            .filter_map(|test| test.check(&t).err())
             .collect::<Vec<ValidationError>>();
         if errors.is_empty() {
             return Ok(Some(to_json(t).unwrap()));

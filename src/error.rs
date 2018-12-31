@@ -4,7 +4,7 @@ use std::collections::HashMap;
 #[derive(Debug, PartialEq)]
 pub enum ValidationError {
     Type(String),
-    Value(String),
+    Test(String),
     Field(Vec<ValidationError>),
     Object(HashMap<String, ValidationError>),
     Array(HashMap<usize, ValidationError>),
@@ -16,8 +16,8 @@ pub fn type_error(expected: JsonType, actual: JsonType) -> ValidationError {
     ValidationError::Type(format!("Expected {}, but got {}.", expected, actual))
 }
 
-pub fn value_error<M: Into<String>>(message: M) -> ValidationError {
-    ValidationError::Value(message.into())
+pub fn test_error<M: Into<String>>(message: M) -> ValidationError {
+    ValidationError::Test(message.into())
 }
 
 pub fn field_error(errors: Vec<ValidationError>) -> ValidationError {

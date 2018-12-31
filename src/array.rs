@@ -20,42 +20,27 @@ impl ArraySchema {
         }
     }
 
-    pub fn length(mut self, (minimum, maximum): (usize, usize)) -> Self {
-        self.validator.test(move |array| {
-            if array.len() >= minimum && array.len() <= maximum {
-                return Ok(());
-            }
-            Err(error::value_error(format!(
-                "Expected Array with length between {} and {}.",
-                minimum, maximum
-            )))
-        });
+    pub fn length(mut self, (min, max): (usize, usize)) -> Self {
+        self.validator.add_test(
+            format!("Expected Array with length between {} and {}.", min, max),
+            move |array| Ok(array.len() >= min && array.len() <= max),
+        );
         self
     }
 
-    pub fn min_length(mut self, minimum: usize) -> Self {
-        self.validator.test(move |array| {
-            if array.len() >= minimum {
-                return Ok(());
-            }
-            Err(error::value_error(format!(
-                "Expected Array with length of at least {}.",
-                minimum
-            )))
-        });
+    pub fn min_length(mut self, min: usize) -> Self {
+        self.validator.add_test(
+            format!("Expected Array with length of at least {}.", min),
+            move |array| Ok(array.len() >= min),
+        );
         self
     }
 
-    pub fn max_length(mut self, maximum: usize) -> Self {
-        self.validator.test(move |array| {
-            if array.len() <= maximum {
-                return Ok(());
-            }
-            Err(error::value_error(format!(
-                "Expected Array with length of at most {}.",
-                maximum
-            )))
-        });
+    pub fn max_length(mut self, max: usize) -> Self {
+        self.validator.add_test(
+            format!("Expected Array with length of at most {}.", max),
+            move |array| Ok(array.len() <= max),
+        );
         self
     }
 
@@ -181,13 +166,13 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!([]))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected Array with length between 1 and 3."
             )]))
         );
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz", "qux"]))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected Array with length between 1 and 3."
             )]))
         );
@@ -202,7 +187,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!(["foo"]))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected Array with length of at least 4."
             )]))
         );
@@ -217,7 +202,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz", "qux"]))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected Array with length of at most 3."
             )]))
         );

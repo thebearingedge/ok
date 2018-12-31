@@ -1,5 +1,5 @@
 use super::{
-    error::{self, Result},
+    error::Result,
     json::{Json, JsonType},
     OkSchema, Validator,
 };
@@ -24,37 +24,27 @@ impl<N: Number> NumberSchema<N> {
         }
     }
 
-    pub fn min(mut self, minimum: N) -> Self
+    pub fn min(mut self, min: N) -> Self
     where
         N: 'static,
     {
         let json_type = self.validator.json_type;
-        self.validator.test(move |number| {
-            if number >= &minimum {
-                return Ok(());
-            }
-            Err(error::value_error(format!(
-                "Expected {} value of at least {}.",
-                json_type, minimum
-            )))
-        });
+        self.validator.add_test(
+            format!("Expected {} value of at least {}.", json_type, min),
+            move |number| Ok(number >= &min),
+        );
         self
     }
 
-    pub fn max(mut self, maximum: N) -> Self
+    pub fn max(mut self, max: N) -> Self
     where
         N: 'static,
     {
         let json_type = self.validator.json_type;
-        self.validator.test(move |number| {
-            if number <= &maximum {
-                return Ok(());
-            }
-            Err(error::value_error(format!(
-                "Expected {} value of at most {}.",
-                json_type, maximum
-            )))
-        });
+        self.validator.add_test(
+            format!("Expected {} value of at most {}.", json_type, max),
+            move |number| Ok(number <= &max),
+        );
         self
     }
 
@@ -63,15 +53,10 @@ impl<N: Number> NumberSchema<N> {
         N: 'static,
     {
         let json_type = self.validator.json_type;
-        self.validator.test(move |number| {
-            if number > &limit {
-                return Ok(());
-            }
-            Err(error::value_error(format!(
-                "Expected {} value greater than {}.",
-                json_type, limit
-            )))
-        });
+        self.validator.add_test(
+            format!("Expected {} value greater than {}.", json_type, limit),
+            move |number| Ok(number > &limit),
+        );
         self
     }
 
@@ -80,15 +65,10 @@ impl<N: Number> NumberSchema<N> {
         N: 'static,
     {
         let json_type = self.validator.json_type;
-        self.validator.test(move |number| {
-            if number < &limit {
-                return Ok(());
-            }
-            Err(error::value_error(format!(
-                "Expected {} value less than {}.",
-                json_type, limit
-            )))
-        });
+        self.validator.add_test(
+            format!("Expected {} value less than {}.", json_type, limit),
+            move |number| Ok(number < &limit),
+        );
         self
     }
 }
@@ -289,19 +269,19 @@ mod tests {
         assert_eq!(f.validate(Some(json!(6.0))), Ok(Some(json!(6.0))));
         assert_eq!(
             u.validate(Some(json!(4))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected Unsigned Integer value of at least 5."
             )]))
         );
         assert_eq!(
             i.validate(Some(json!(4))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected Integer value of at least 5."
             )]))
         );
         assert_eq!(
             f.validate(Some(json!(4.0))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected Float value of at least 5."
             )]))
         );
@@ -317,19 +297,19 @@ mod tests {
         assert_eq!(f.validate(Some(json!(4.0))), Ok(Some(json!(4.0))));
         assert_eq!(
             u.validate(Some(json!(6))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected Unsigned Integer value of at most 5."
             )]))
         );
         assert_eq!(
             i.validate(Some(json!(6))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected Integer value of at most 5."
             )]))
         );
         assert_eq!(
             f.validate(Some(json!(6.0))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected Float value of at most 5."
             )]))
         );
@@ -345,19 +325,19 @@ mod tests {
         assert_eq!(f.validate(Some(json!(6.0))), Ok(Some(json!(6.0))));
         assert_eq!(
             u.validate(Some(json!(5))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected Unsigned Integer value greater than 5."
             )]))
         );
         assert_eq!(
             i.validate(Some(json!(5))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected Integer value greater than 5."
             )]))
         );
         assert_eq!(
             f.validate(Some(json!(5.0))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected Float value greater than 5."
             )]))
         );
@@ -373,19 +353,19 @@ mod tests {
         assert_eq!(f.validate(Some(json!(4.0))), Ok(Some(json!(4.0))));
         assert_eq!(
             u.validate(Some(json!(5))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected Unsigned Integer value less than 5."
             )]))
         );
         assert_eq!(
             i.validate(Some(json!(5))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected Integer value less than 5."
             )]))
         );
         assert_eq!(
             f.validate(Some(json!(5.0))),
-            Err(error::field_error(vec![error::value_error(
+            Err(error::field_error(vec![error::test_error(
                 "Expected Float value less than 5."
             )]))
         );
