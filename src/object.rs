@@ -24,81 +24,49 @@ impl ObjectSchema {
         }
     }
 
-    pub fn boolean<K: Into<String>>(
-        mut self,
-        key: K,
-        builder: fn(BooleanSchema) -> BooleanSchema,
-    ) -> Self {
-        let schema = BooleanSchema::new();
-        self.field_schemas
-            .insert(key.into(), Box::new(builder(schema)));
+    pub fn key(mut self, key: &'static str, schema: impl OkSchema + 'static) -> Self {
+        self.field_schemas.insert(key.into(), Box::new(schema));
         self
     }
 
-    pub fn integer<K: Into<String>>(
-        mut self,
-        key: K,
-        builder: fn(NumberSchema<i64>) -> NumberSchema<i64>,
-    ) -> Self {
-        let schema = NumberSchema::new(JsonType::Integer);
-        self.field_schemas
-            .insert(key.into(), Box::new(builder(schema)));
-        self
+    pub fn boolean(self, key: &'static str, build: fn(BooleanSchema) -> BooleanSchema) -> Self {
+        self.key(key, build(BooleanSchema::new()))
     }
 
-    pub fn float<K: Into<String>>(
-        mut self,
-        key: K,
-        builder: fn(NumberSchema<f64>) -> NumberSchema<f64>,
+    pub fn integer(
+        self,
+        key: &'static str,
+        build: fn(NumberSchema<i64>) -> NumberSchema<i64>,
     ) -> Self {
-        let schema = NumberSchema::new(JsonType::Float);
-        self.field_schemas
-            .insert(key.into(), Box::new(builder(schema)));
-        self
+        self.key(key, build(NumberSchema::new(JsonType::Integer)))
     }
 
-    pub fn unsigned<K: Into<String>>(
-        mut self,
-        key: K,
-        builder: fn(NumberSchema<u64>) -> NumberSchema<u64>,
+    pub fn float(
+        self,
+        key: &'static str,
+        build: fn(NumberSchema<f64>) -> NumberSchema<f64>,
     ) -> Self {
-        let schema = NumberSchema::new(JsonType::Unsigned);
-        self.field_schemas
-            .insert(key.into(), Box::new(builder(schema)));
-        self
+        self.key(key, build(NumberSchema::new(JsonType::Float)))
     }
 
-    pub fn string<K: Into<String>>(
-        mut self,
-        key: K,
-        builder: fn(StringSchema) -> StringSchema,
+    pub fn unsigned(
+        self,
+        key: &'static str,
+        build: fn(NumberSchema<u64>) -> NumberSchema<u64>,
     ) -> Self {
-        let schema = StringSchema::new();
-        self.field_schemas
-            .insert(key.into(), Box::new(builder(schema)));
-        self
+        self.key(key, build(NumberSchema::new(JsonType::Unsigned)))
     }
 
-    pub fn object<K: Into<String>>(
-        mut self,
-        key: K,
-        builder: fn(ObjectSchema) -> ObjectSchema,
-    ) -> Self {
-        let schema = ObjectSchema::new();
-        self.field_schemas
-            .insert(key.into(), Box::new(builder(schema)));
-        self
+    pub fn string(self, key: &'static str, build: fn(StringSchema) -> StringSchema) -> Self {
+        self.key(key, build(StringSchema::new()))
     }
 
-    pub fn array<K: Into<String>>(
-        mut self,
-        key: K,
-        builder: fn(ArraySchema) -> ArraySchema,
-    ) -> Self {
-        let schema = ArraySchema::new();
-        self.field_schemas
-            .insert(key.into(), Box::new(builder(schema)));
-        self
+    pub fn object(self, key: &'static str, build: fn(ObjectSchema) -> ObjectSchema) -> Self {
+        self.key(key, build(ObjectSchema::new()))
+    }
+
+    pub fn array(self, key: &'static str, build: fn(ArraySchema) -> ArraySchema) -> Self {
+        self.key(key, build(ArraySchema::new()))
     }
 }
 
