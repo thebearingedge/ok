@@ -21,9 +21,9 @@ impl ArraySchema {
     }
 
     pub fn length(mut self, (minimum, maximum): (usize, usize)) -> Self {
-        self.validator.append(move |array| {
+        self.validator.test(move |array| {
             if array.len() >= minimum && array.len() <= maximum {
-                return Ok(None);
+                return Ok(());
             }
             Err(error::value_error(format!(
                 "Expected Array with length between {} and {}.",
@@ -34,9 +34,9 @@ impl ArraySchema {
     }
 
     pub fn min_length(mut self, minimum: usize) -> Self {
-        self.validator.append(move |array| {
+        self.validator.test(move |array| {
             if array.len() >= minimum {
-                return Ok(None);
+                return Ok(());
             }
             Err(error::value_error(format!(
                 "Expected Array with length of at least {}.",
@@ -47,9 +47,9 @@ impl ArraySchema {
     }
 
     pub fn max_length(mut self, maximum: usize) -> Self {
-        self.validator.append(move |array| {
+        self.validator.test(move |array| {
             if array.len() <= maximum {
-                return Ok(None);
+                return Ok(());
             }
             Err(error::value_error(format!(
                 "Expected Array with length of at most {}.",

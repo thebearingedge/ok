@@ -29,9 +29,9 @@ impl<N: Number> NumberSchema<N> {
         N: 'static,
     {
         let json_type = self.validator.json_type;
-        self.validator.append(move |number| {
+        self.validator.test(move |number| {
             if number >= &minimum {
-                return Ok(None);
+                return Ok(());
             }
             Err(error::value_error(format!(
                 "Expected {} value of at least {}.",
@@ -46,9 +46,9 @@ impl<N: Number> NumberSchema<N> {
         N: 'static,
     {
         let json_type = self.validator.json_type;
-        self.validator.append(move |number| {
+        self.validator.test(move |number| {
             if number <= &maximum {
-                return Ok(None);
+                return Ok(());
             }
             Err(error::value_error(format!(
                 "Expected {} value of at most {}.",
@@ -63,9 +63,9 @@ impl<N: Number> NumberSchema<N> {
         N: 'static,
     {
         let json_type = self.validator.json_type;
-        self.validator.append(move |number| {
+        self.validator.test(move |number| {
             if number > &limit {
-                return Ok(None);
+                return Ok(());
             }
             Err(error::value_error(format!(
                 "Expected {} value greater than {}.",
@@ -80,9 +80,9 @@ impl<N: Number> NumberSchema<N> {
         N: 'static,
     {
         let json_type = self.validator.json_type;
-        self.validator.append(move |number| {
+        self.validator.test(move |number| {
             if number < &limit {
-                return Ok(None);
+                return Ok(());
             }
             Err(error::value_error(format!(
                 "Expected {} value less than {}.",

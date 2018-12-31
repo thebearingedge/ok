@@ -19,9 +19,9 @@ impl StringSchema {
     }
 
     pub fn length(mut self, (minimum, maximum): (usize, usize)) -> Self {
-        self.validator.append(move |string| {
+        self.validator.test(move |string| {
             if string.len() >= minimum && string.len() <= maximum {
-                return Ok(None);
+                return Ok(());
             }
             Err(error::value_error(format!(
                 "Expected String with length between {} and {}.",
@@ -32,9 +32,9 @@ impl StringSchema {
     }
 
     pub fn min_length(mut self, minimum: usize) -> Self {
-        self.validator.append(move |string| {
+        self.validator.test(move |string| {
             if string.len() >= minimum {
-                return Ok(None);
+                return Ok(());
             }
             Err(error::value_error(format!(
                 "Expected String with length of at least {}.",
@@ -45,9 +45,9 @@ impl StringSchema {
     }
 
     pub fn max_length(mut self, maximum: usize) -> Self {
-        self.validator.append(move |string| {
+        self.validator.test(move |string| {
             if string.len() <= maximum {
-                return Ok(None);
+                return Ok(());
             }
             Err(error::value_error(format!(
                 "Expected String with length of at most {}.",
@@ -58,28 +58,27 @@ impl StringSchema {
     }
 
     pub fn trim(mut self) -> Self {
-        self.validator
-            .append(|string| Ok(Some(string.trim().to_string())));
+        self.validator.transform(|string| string.trim().to_string());
         self
     }
 
     pub fn uppercase(mut self) -> Self {
         self.validator
-            .append(|string| Ok(Some(string.to_uppercase().to_string())));
+            .transform(|string| string.to_uppercase().to_string());
         self
     }
 
     pub fn lowercase(mut self) -> Self {
         self.validator
-            .append(|string| Ok(Some(string.to_lowercase().to_string())));
+            .transform(|string| string.to_lowercase().to_string());
         self
     }
 
     pub fn pattern(mut self, pattern: &str) -> Self {
         let regex = Regex::new(pattern).unwrap();
-        self.validator.append(move |string| {
+        self.validator.test(move |string| {
             if regex.is_match(string) {
-                return Ok(None);
+                return Ok(());
             }
             Err(error::value_error(format!(
                 "Expected String to match pattern '{}'.",
@@ -90,9 +89,9 @@ impl StringSchema {
     }
 
     pub fn regex(mut self, regex: Regex) -> Self {
-        self.validator.append(move |string| {
+        self.validator.test(move |string| {
             if regex.is_match(string) {
-                return Ok(None);
+                return Ok(());
             }
             Err(error::value_error(format!(
                 "Expected String to match pattern '{}'.",
