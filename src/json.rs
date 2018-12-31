@@ -37,12 +37,6 @@ impl JsonType {
                 }
                 Err(error::type_error(JsonType::Boolean, (&Some(json)).into()))
             }
-            JsonType::Object => {
-                if json.is_object() {
-                    return Ok(json);
-                }
-                Err(error::type_error(JsonType::Object, (&Some(json)).into()))
-            }
             JsonType::Integer => {
                 if json.is_i64() {
                     return Ok(json);
