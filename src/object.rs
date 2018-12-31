@@ -12,7 +12,7 @@ use std::collections::HashMap;
 pub struct ObjectSchema {
     description: Option<&'static str>,
     validator: Validator<Object>,
-    field_schemas: HashMap<String, Box<OkSchema>>,
+    property_schemas: HashMap<String, Box<OkSchema>>,
 }
 
 impl ObjectSchema {
@@ -20,12 +20,12 @@ impl ObjectSchema {
         ObjectSchema {
             description: None,
             validator: Validator::new(JsonType::Object),
-            field_schemas: HashMap::new(),
+            property_schemas: HashMap::new(),
         }
     }
 
     pub fn key(mut self, key: &'static str, schema: impl OkSchema + 'static) -> Self {
-        self.field_schemas.insert(key.into(), Box::new(schema));
+        self.property_schemas.insert(key.into(), Box::new(schema));
         self
     }
 
@@ -88,7 +88,7 @@ impl OkSchema for ObjectSchema {
 
     fn validate(&self, value: Option<Json>) -> Result<Option<Json>> {
         let validated = self.validator.exec(value)?;
-        if self.field_schemas.is_empty() {
+        if self.property_schemas.is_empty() {
             return Ok(validated);
         }
         let mut fields = match validated {
@@ -100,7 +100,7 @@ impl OkSchema for ObjectSchema {
         };
         let mut object = Object::new();
         let mut errors = HashMap::new();
-        self.field_schemas.iter().for_each(|(key, schema)| {
+        self.property_schemas.iter().for_each(|(key, schema)| {
             match schema.validate(fields.remove(key)) {
                 Ok(None) => (),
                 Ok(Some(value)) => {
