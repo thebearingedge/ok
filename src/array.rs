@@ -124,7 +124,7 @@ pub fn array() -> ArraySchema {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{array, boolean, error, json::JsonType, OkSchema};
+    use super::super::{array, boolean, error, integer, json::JsonType, object, string, OkSchema};
     use maplit::hashmap;
     use serde_json::json;
 
@@ -243,6 +243,78 @@ mod tests {
                 0 => error::type_error(JsonType::Boolean, JsonType::Number),
                 1 => error::type_error(JsonType::Boolean, JsonType::Number),
                 2 => error::type_error(JsonType::Boolean, JsonType::Number)
+            }))
+        );
+    }
+
+    #[test]
+    fn it_validates_arrays_of_numbers() {
+        let schema = array().of(integer());
+
+        assert_eq!(
+            schema.validate(Some(json!([1, 2, 3]))),
+            Ok(Some(json!([1, 2, 3])))
+        );
+        assert_eq!(
+            schema.validate(Some(json!(["foo", "bar", "baz"]))),
+            Err(error::array_error(hashmap! {
+                0 => error::type_error(JsonType::Integer, JsonType::String),
+                1 => error::type_error(JsonType::Integer, JsonType::String),
+                2 => error::type_error(JsonType::Integer, JsonType::String)
+            }))
+        );
+    }
+
+    #[test]
+    fn it_validates_arrays_of_strings() {
+        let schema = array().of(string());
+
+        assert_eq!(
+            schema.validate(Some(json!(["foo", "bar", "baz"]))),
+            Ok(Some(json!(["foo", "bar", "baz"])))
+        );
+        assert_eq!(
+            schema.validate(Some(json!([null, null, null]))),
+            Err(error::array_error(hashmap! {
+                0 => error::type_error(JsonType::String, JsonType::Null),
+                1 => error::type_error(JsonType::String, JsonType::Null),
+                2 => error::type_error(JsonType::String, JsonType::Null)
+            }))
+        );
+    }
+
+    #[test]
+    fn it_validates_arrays_of_objects() {
+        let schema = array().of(object());
+
+        assert_eq!(
+            schema.validate(Some(json!([{}, {}, {}]))),
+            Ok(Some(json!([{}, {}, {}])))
+        );
+        assert_eq!(
+            schema.validate(Some(json!(["foo", "bar", "baz"]))),
+            Err(error::array_error(hashmap! {
+                0 => error::type_error(JsonType::Object, JsonType::String),
+                1 => error::type_error(JsonType::Object, JsonType::String),
+                2 => error::type_error(JsonType::Object, JsonType::String)
+            }))
+        );
+    }
+
+    #[test]
+    fn it_validates_arrays_of_arrays() {
+        let schema = array().of(array());
+
+        assert_eq!(
+            schema.validate(Some(json!([[], [], []]))),
+            Ok(Some(json!([[], [], []])))
+        );
+        assert_eq!(
+            schema.validate(Some(json!([1, 2, 3]))),
+            Err(error::array_error(hashmap! {
+                0 => error::type_error(JsonType::Array, JsonType::Number),
+                1 => error::type_error(JsonType::Array, JsonType::Number),
+                2 => error::type_error(JsonType::Array, JsonType::Number)
             }))
         );
     }

@@ -1,4 +1,5 @@
 use super::{
+    array::ArraySchema,
     boolean::BooleanSchema,
     error::{self, Result},
     json::{Json, JsonType, Object},
@@ -84,6 +85,17 @@ impl ObjectSchema {
         builder: fn(ObjectSchema) -> ObjectSchema,
     ) -> Self {
         let schema = ObjectSchema::new();
+        self.field_schemas
+            .insert(key.into(), Box::new(builder(schema)));
+        self
+    }
+
+    pub fn array<K: Into<String>>(
+        mut self,
+        key: K,
+        builder: fn(ArraySchema) -> ArraySchema,
+    ) -> Self {
+        let schema = ArraySchema::new();
         self.field_schemas
             .insert(key.into(), Box::new(builder(schema)));
         self
@@ -268,6 +280,22 @@ mod tests {
             schema.validate(Some(json!({ "foo": true }))),
             Err(error::object_error(hashmap! {
                 "foo".into() => error::type_error(JsonType::Object, JsonType::Boolean)
+            }))
+        );
+    }
+
+    #[test]
+    fn it_validates_array_fields() {
+        let schema = object().array("foo", |field| field.desc("A nested Object."));
+
+        assert_eq!(
+            schema.validate(Some(json!({ "foo": [] }))),
+            Ok(Some(json!({ "foo": [] })))
+        );
+        assert_eq!(
+            schema.validate(Some(json!({ "foo": true }))),
+            Err(error::object_error(hashmap! {
+                "foo".into() => error::type_error(JsonType::Array, JsonType::Boolean)
             }))
         );
     }
