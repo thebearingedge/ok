@@ -1,6 +1,6 @@
 use super::{
     error::{self, Result},
-    json::{Array, Json, JsonType},
+    json::{from_json, Array, Json, JsonType},
     OkSchema, Validator,
 };
 use std::collections::HashMap;
@@ -68,15 +68,10 @@ impl OkSchema for ArraySchema {
 
     fn validate(&self, value: Option<Json>) -> Result<Option<Json>> {
         let validated = self.validator.exec(value)?;
-        if self.element_schema.is_none() {
-            return Ok(validated);
-        }
         let elements = match validated {
             None => return Ok(None),
-            Some(json) => match json {
-                Json::Array(elements) => elements,
-                _ => return Ok(Some(json)),
-            },
+            Some(_) if self.element_schema.is_none() => return Ok(validated),
+            Some(json) => from_json::<Array>(json).unwrap(),
         };
         let mut array = vec![];
         let mut errors = HashMap::new();

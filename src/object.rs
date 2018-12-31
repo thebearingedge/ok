@@ -2,7 +2,7 @@ use super::{
     array::ArraySchema,
     boolean::BooleanSchema,
     error::{self, Result},
-    json::{Json, JsonType, Object},
+    json::{from_json, Json, JsonType, Object},
     number::NumberSchema,
     string::StringSchema,
     OkSchema, Validator,
@@ -76,15 +76,10 @@ impl OkSchema for ObjectSchema {
 
     fn validate(&self, value: Option<Json>) -> Result<Option<Json>> {
         let validated = self.validator.exec(value)?;
-        if self.property_schemas.is_empty() {
-            return Ok(validated);
-        }
         let mut fields = match validated {
             None => return Ok(None),
-            Some(json) => match json {
-                Json::Object(fields) => fields,
-                _ => return Ok(Some(json)),
-            },
+            Some(_) if self.property_schemas.is_empty() => return Ok(validated),
+            Some(json) => from_json::<Object>(json).unwrap(),
         };
         let mut object = Object::new();
         let mut errors = HashMap::new();
