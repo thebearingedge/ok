@@ -6,21 +6,24 @@ use super::{
 
 pub struct BooleanSchema {
     validator: Validator<bool>,
-    description: Option<&'static str>,
 }
 
 impl BooleanSchema {
     pub fn new() -> Self {
         BooleanSchema {
-            description: None,
             validator: Validator::new(JsonType::Boolean),
         }
     }
 }
 
 impl OkSchema for BooleanSchema {
+    fn label(mut self, label: &'static str) -> Self {
+        self.validator.label = Some(label);
+        self
+    }
+
     fn desc(mut self, description: &'static str) -> Self {
-        self.description = Some(description);
+        self.validator.description = Some(description);
         self
     }
 

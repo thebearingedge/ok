@@ -13,13 +13,11 @@ impl Number for f64 {}
 
 pub struct NumberSchema<N: Number> {
     validator: Validator<N>,
-    description: Option<&'static str>,
 }
 
 impl<N: Number> NumberSchema<N> {
     pub fn new(json_type: JsonType) -> Self {
         NumberSchema {
-            description: None,
             validator: Validator::new(json_type),
         }
     }
@@ -74,8 +72,13 @@ impl<N: Number> NumberSchema<N> {
 }
 
 impl<N: Number> OkSchema for NumberSchema<N> {
+    fn label(mut self, label: &'static str) -> Self {
+        self.validator.label = Some(label);
+        self
+    }
+
     fn desc(mut self, description: &'static str) -> Self {
-        self.description = Some(description);
+        self.validator.description = Some(description);
         self
     }
 

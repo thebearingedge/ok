@@ -1,6 +1,10 @@
 use super::{error::Result, json::Json};
 
 pub trait OkSchema {
+    fn label(self, label: &'static str) -> Self
+    where
+        Self: Sized;
+
     fn desc(self, description: &'static str) -> Self
     where
         Self: Sized;

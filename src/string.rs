@@ -7,13 +7,11 @@ use regex::Regex;
 
 pub struct StringSchema {
     validator: Validator<String>,
-    description: Option<&'static str>,
 }
 
 impl StringSchema {
     pub fn new() -> Self {
         StringSchema {
-            description: None,
             validator: Validator::new(JsonType::String),
         }
     }
@@ -79,8 +77,13 @@ impl StringSchema {
 }
 
 impl OkSchema for StringSchema {
+    fn label(mut self, label: &'static str) -> Self {
+        self.validator.label = Some(label);
+        self
+    }
+
     fn desc(mut self, description: &'static str) -> Self {
-        self.description = Some(description);
+        self.validator.description = Some(description);
         self
     }
 

@@ -7,14 +7,12 @@ use std::collections::HashMap;
 
 pub struct ArraySchema {
     validator: Validator<Array>,
-    description: Option<&'static str>,
     element_schema: Option<Box<OkSchema>>,
 }
 
 impl ArraySchema {
     pub fn new() -> Self {
         ArraySchema {
-            description: None,
             validator: Validator::new(JsonType::Array),
             element_schema: None,
         }
@@ -51,8 +49,12 @@ impl ArraySchema {
 }
 
 impl OkSchema for ArraySchema {
+    fn label(mut self, label: &'static str) -> Self {
+        self.validator.label = Some(label);
+        self
+    }
     fn desc(mut self, description: &'static str) -> Self {
-        self.description = Some(description);
+        self.validator.description = Some(description);
         self
     }
 

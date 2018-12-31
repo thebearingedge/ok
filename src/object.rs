@@ -10,7 +10,6 @@ use super::{
 use std::collections::HashMap;
 
 pub struct ObjectSchema {
-    description: Option<&'static str>,
     validator: Validator<Object>,
     property_schemas: HashMap<String, Box<OkSchema>>,
 }
@@ -18,9 +17,8 @@ pub struct ObjectSchema {
 impl ObjectSchema {
     pub fn new() -> Self {
         ObjectSchema {
-            description: None,
-            validator: Validator::new(JsonType::Object),
             property_schemas: HashMap::new(),
+            validator: Validator::new(JsonType::Object),
         }
     }
 
@@ -59,8 +57,13 @@ impl ObjectSchema {
 }
 
 impl OkSchema for ObjectSchema {
+    fn label(mut self, label: &'static str) -> Self {
+        self.validator.label = Some(label);
+        self
+    }
+
     fn desc(mut self, description: &'static str) -> Self {
-        self.description = Some(description);
+        self.validator.description = Some(description);
         self
     }
 

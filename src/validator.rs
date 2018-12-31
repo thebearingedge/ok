@@ -7,6 +7,8 @@ use serde::{de::DeserializeOwned, ser::Serialize};
 
 pub struct Validator<T: DeserializeOwned + Serialize> {
     pub json_type: JsonType,
+    pub label: Option<&'static str>,
+    pub description: Option<&'static str>,
     pub is_optional: bool,
     pub is_nullable: bool,
     pub tests: Vec<Test<T>>,
@@ -17,6 +19,8 @@ impl<T: DeserializeOwned + Serialize> Validator<T> {
     pub fn new(json_type: JsonType) -> Self {
         Validator {
             json_type,
+            label: None,
+            description: None,
             is_optional: false,
             is_nullable: false,
             tests: vec![],
