@@ -137,7 +137,6 @@ mod tests {
     #[test]
     fn it_validates_strings() {
         let schema = string();
-
         assert_eq!(schema.validate(Some(json!("foo"))), Ok(Some(json!("foo"))));
         assert_eq!(schema.validate(Some(json!(true))), Ok(Some(json!("true"))));
         assert_eq!(schema.validate(Some(json!(1))), Ok(Some(json!("1"))));
@@ -162,7 +161,6 @@ mod tests {
     #[test]
     fn it_validates_optional_strings() {
         let schema = string().optional();
-
         assert_eq!(schema.validate(Some(json!("foo"))), Ok(Some(json!("foo"))));
         assert_eq!(schema.validate(None), Ok(None));
     }
@@ -170,7 +168,6 @@ mod tests {
     #[test]
     fn it_validates_nullable_strings() {
         let schema = string().nullable();
-
         assert_eq!(schema.validate(Some(json!("foo"))), Ok(Some(json!("foo"))));
         assert_eq!(schema.validate(Some(json!(null))), Ok(Some(json!(null))));
     }
@@ -178,7 +175,6 @@ mod tests {
     #[test]
     fn it_sets_a_minimum_and_maximum_length() {
         let schema = string().length((1, 3));
-
         assert_eq!(schema.validate(Some(json!("foo"))), Ok(Some(json!("foo"))));
         assert_eq!(
             schema.validate(Some(json!(""))),
@@ -197,7 +193,6 @@ mod tests {
     #[test]
     fn it_sets_a_minimum_length() {
         let schema = string().min_length(4);
-
         assert_eq!(
             schema.validate(Some(json!("quux"))),
             Ok(Some(json!("quux")))
@@ -213,7 +208,6 @@ mod tests {
     #[test]
     fn it_sets_a_maximum_length() {
         let schema = string().max_length(3);
-
         assert_eq!(schema.validate(Some(json!("qux"))), Ok(Some(json!("qux"))));
         assert_eq!(
             schema.validate(Some(json!("quux"))),
@@ -226,7 +220,6 @@ mod tests {
     #[test]
     fn it_trims_strings() {
         let schema = string().trim();
-
         assert_eq!(
             schema.validate(Some(json!("  foo  "))),
             Ok(Some(json!("foo")))
@@ -236,26 +229,22 @@ mod tests {
     #[test]
     fn it_uppercases_strings() {
         let schema = string().uppercase();
-
         assert_eq!(schema.validate(Some(json!("foo"))), Ok(Some(json!("FOO"))));
     }
 
     #[test]
     fn it_lowercases_strings() {
         let schema = string().lowercase();
-
         assert_eq!(schema.validate(Some(json!("FOO"))), Ok(Some(json!("foo"))));
     }
 
     #[test]
     fn it_sets_a_regex_pattern() {
         let schema = string().pattern("(?i)^foo");
-
         assert_eq!(
             schema.validate(Some(json!("Foobar"))),
             Ok(Some(json!("Foobar")))
         );
-
         assert_eq!(
             schema.validate(Some(json!("Barfoo"))),
             Err(error::field_error(vec![error::value_error(
@@ -268,12 +257,10 @@ mod tests {
     fn it_sets_a_regex_object() {
         let regex = RegexBuilder::new("(?i)^foo").build().unwrap();
         let schema = string().regex(regex);
-
         assert_eq!(
             schema.validate(Some(json!("Foobar"))),
             Ok(Some(json!("Foobar")))
         );
-
         assert_eq!(
             schema.validate(Some(json!("Barfoo"))),
             Err(error::field_error(vec![error::value_error(

@@ -131,7 +131,6 @@ mod tests {
     #[test]
     fn it_validates_arrays() {
         let schema = array();
-
         assert_eq!(schema.validate(Some(json!([]))), Ok(Some(json!([]))));
         assert_eq!(
             schema.validate(Some(json!(null))),
@@ -162,7 +161,6 @@ mod tests {
     #[test]
     fn it_validates_optional_arrays() {
         let schema = array().optional();
-
         assert_eq!(schema.validate(Some(json!([]))), Ok(Some(json!([]))));
         assert_eq!(schema.validate(None), Ok(None));
     }
@@ -170,7 +168,6 @@ mod tests {
     #[test]
     fn it_validates_nullable_arrays() {
         let schema = array().nullable();
-
         assert_eq!(schema.validate(Some(json!([]))), Ok(Some(json!([]))));
         assert_eq!(schema.validate(Some(json!(null))), Ok(Some(json!(null))));
     }
@@ -178,7 +175,6 @@ mod tests {
     #[test]
     fn it_sets_a_minimum_and_maximum_length() {
         let schema = array().length((1, 3));
-
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz"]))),
             Ok(Some(json!(["foo", "bar", "baz"])))
@@ -200,7 +196,6 @@ mod tests {
     #[test]
     fn it_sets_a_minimum_length() {
         let schema = array().min_length(4);
-
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz", "qux"]))),
             Ok(Some(json!(["foo", "bar", "baz", "qux"])))
@@ -216,7 +211,6 @@ mod tests {
     #[test]
     fn it_sets_a_maximum_length() {
         let schema = array().max_length(3);
-
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz"]))),
             Ok(Some(json!(["foo", "bar", "baz"])))
@@ -232,7 +226,6 @@ mod tests {
     #[test]
     fn it_validates_arrays_of_booleans() {
         let schema = array().of(boolean());
-
         assert_eq!(
             schema.validate(Some(json!([true, false, true]))),
             Ok(Some(json!([true, false, true])))
@@ -250,7 +243,6 @@ mod tests {
     #[test]
     fn it_validates_arrays_of_numbers() {
         let schema = array().of(integer());
-
         assert_eq!(
             schema.validate(Some(json!([1, 2, 3]))),
             Ok(Some(json!([1, 2, 3])))
@@ -268,7 +260,6 @@ mod tests {
     #[test]
     fn it_validates_arrays_of_strings() {
         let schema = array().of(string());
-
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz"]))),
             Ok(Some(json!(["foo", "bar", "baz"])))
@@ -286,7 +277,6 @@ mod tests {
     #[test]
     fn it_validates_arrays_of_objects() {
         let schema = array().of(object());
-
         assert_eq!(
             schema.validate(Some(json!([{}, {}, {}]))),
             Ok(Some(json!([{}, {}, {}])))
@@ -304,7 +294,6 @@ mod tests {
     #[test]
     fn it_validates_arrays_of_arrays() {
         let schema = array().of(array());
-
         assert_eq!(
             schema.validate(Some(json!([[], [], []]))),
             Ok(Some(json!([[], [], []])))

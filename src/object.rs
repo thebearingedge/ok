@@ -165,7 +165,6 @@ mod tests {
     #[test]
     fn it_validates_objects() {
         let schema = object();
-
         assert_eq!(schema.validate(Some(json!({}))), Ok(Some(json!({}))));
         assert_eq!(
             schema.validate(Some(json!(null))),
@@ -196,7 +195,6 @@ mod tests {
     #[test]
     fn it_validates_optional_objects() {
         let schema = object().optional();
-
         assert_eq!(schema.validate(Some(json!({}))), Ok(Some(json!({}))));
         assert_eq!(schema.validate(None), Ok(None));
     }
@@ -204,7 +202,6 @@ mod tests {
     #[test]
     fn it_validates_nullable_objects() {
         let schema = object().nullable();
-
         assert_eq!(schema.validate(Some(json!({}))), Ok(Some(json!({}))));
         assert_eq!(schema.validate(Some(json!(null))), Ok(Some(json!(null))));
     }
@@ -214,7 +211,6 @@ mod tests {
         let schema = object()
             .boolean("foo", |field| field.desc("A Boolean value."))
             .boolean("bar", |field| field.desc("Another Boolean value."));
-
         assert_eq!(
             schema.validate(Some(json!({ "foo": true, "bar": false }))),
             Ok(Some(json!({ "foo": true, "bar": false })))
@@ -234,7 +230,6 @@ mod tests {
             .integer("foo", |field| field.desc("An integer."))
             .float("bar", |field| field.desc("A float."))
             .unsigned("baz", |field| field.desc("An unsigned."));
-
         assert_eq!(
             schema.validate(Some(json!({ "foo": 1, "bar": 2.0, "baz": 3 }))),
             Ok(Some(json!({ "foo": 1, "bar": 2.0, "baz": 3 })))
@@ -254,7 +249,6 @@ mod tests {
         let schema = object()
             .string("foo", |field| field.desc("A String value."))
             .string("baz", |field| field.desc("Another String value."));
-
         assert_eq!(
             schema.validate(Some(json!({ "foo": "bar", "baz": "qux" }))),
             Ok(Some(json!({ "foo": "bar", "baz": "qux" })))
@@ -271,7 +265,6 @@ mod tests {
     #[test]
     fn it_validates_object_fields() {
         let schema = object().object("foo", |field| field.desc("A nested Object."));
-
         assert_eq!(
             schema.validate(Some(json!({ "foo": {} }))),
             Ok(Some(json!({ "foo": {} })))
@@ -287,7 +280,6 @@ mod tests {
     #[test]
     fn it_validates_array_fields() {
         let schema = object().array("foo", |field| field.desc("A nested Object."));
-
         assert_eq!(
             schema.validate(Some(json!({ "foo": [] }))),
             Ok(Some(json!({ "foo": [] })))

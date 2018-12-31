@@ -134,7 +134,6 @@ mod tests {
     #[test]
     fn it_validates_integers() {
         let schema = integer();
-
         assert_eq!(schema.validate(Some(json!(1))), Ok(Some(json!(1))));
         assert_eq!(schema.validate(Some(json!(1.0))), Ok(Some(json!(1))));
         assert_eq!(schema.validate(Some(json!("1"))), Ok(Some(json!(1))));
@@ -178,7 +177,6 @@ mod tests {
     #[test]
     fn it_validates_unsigned_integers() {
         let schema = unsigned();
-
         assert_eq!(schema.validate(Some(json!(1))), Ok(Some(json!(1))));
         assert_eq!(schema.validate(Some(json!(1.0))), Ok(Some(json!(1))));
         assert_eq!(schema.validate(Some(json!("1"))), Ok(Some(json!(1))));
@@ -223,7 +221,6 @@ mod tests {
     #[test]
     fn it_validates_floats() {
         let schema = float();
-
         assert_eq!(schema.validate(Some(json!(1))), Ok(Some(json!(1.0))));
         assert_eq!(schema.validate(Some(json!(1.0))), Ok(Some(json!(1.0))));
         assert_eq!(schema.validate(Some(json!("1"))), Ok(Some(json!(1.0))));
@@ -267,7 +264,6 @@ mod tests {
         let u = unsigned().optional();
         let i = integer().optional();
         let f = float().optional();
-
         assert_eq!(u.validate(None), Ok(None));
         assert_eq!(i.validate(None), Ok(None));
         assert_eq!(f.validate(None), Ok(None));
@@ -278,7 +274,6 @@ mod tests {
         let u = unsigned().nullable();
         let i = integer().nullable();
         let f = float().nullable();
-
         assert_eq!(u.validate(Some(json!(null))), Ok(Some(json!(null))));
         assert_eq!(i.validate(Some(json!(null))), Ok(Some(json!(null))));
         assert_eq!(f.validate(Some(json!(null))), Ok(Some(json!(null))));
@@ -289,7 +284,6 @@ mod tests {
         let u = unsigned().min(5);
         let i = integer().min(5);
         let f = float().min(5.0);
-
         assert_eq!(u.validate(Some(json!(6))), Ok(Some(json!(6))));
         assert_eq!(i.validate(Some(json!(6))), Ok(Some(json!(6))));
         assert_eq!(f.validate(Some(json!(6.0))), Ok(Some(json!(6.0))));
@@ -318,7 +312,6 @@ mod tests {
         let u = unsigned().max(5);
         let i = integer().max(5);
         let f = float().max(5.0);
-
         assert_eq!(u.validate(Some(json!(4))), Ok(Some(json!(4))));
         assert_eq!(i.validate(Some(json!(4))), Ok(Some(json!(4))));
         assert_eq!(f.validate(Some(json!(4.0))), Ok(Some(json!(4.0))));
@@ -347,7 +340,6 @@ mod tests {
         let u = unsigned().greater_than(5);
         let i = integer().greater_than(5);
         let f = float().greater_than(5.0);
-
         assert_eq!(u.validate(Some(json!(6))), Ok(Some(json!(6))));
         assert_eq!(i.validate(Some(json!(6))), Ok(Some(json!(6))));
         assert_eq!(f.validate(Some(json!(6.0))), Ok(Some(json!(6.0))));
@@ -376,7 +368,6 @@ mod tests {
         let u = unsigned().less_than(5);
         let i = integer().less_than(5);
         let f = float().less_than(5.0);
-
         assert_eq!(u.validate(Some(json!(4))), Ok(Some(json!(4))));
         assert_eq!(i.validate(Some(json!(4))), Ok(Some(json!(4))));
         assert_eq!(f.validate(Some(json!(4.0))), Ok(Some(json!(4.0))));

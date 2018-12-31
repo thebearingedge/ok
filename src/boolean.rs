@@ -51,7 +51,6 @@ mod tests {
     #[test]
     fn it_validates_booleans() {
         let schema = boolean();
-
         assert_eq!(schema.validate(Some(json!(true))), Ok(Some(json!(true))));
         assert_eq!(schema.validate(Some(json!(false))), Ok(Some(json!(false))));
         assert_eq!(schema.validate(Some(json!("true"))), Ok(Some(json!(true))));
@@ -88,7 +87,6 @@ mod tests {
     #[test]
     fn it_validates_optional_booleans() {
         let schema = boolean().optional();
-
         assert_eq!(schema.validate(Some(json!(true))), Ok(Some(json!(true))));
         assert_eq!(schema.validate(None), Ok(None));
     }
@@ -96,7 +94,6 @@ mod tests {
     #[test]
     fn it_validates_nullable_booleans() {
         let schema = boolean().nullable();
-
         assert_eq!(schema.validate(Some(json!(true))), Ok(Some(json!(true))));
         assert_eq!(schema.validate(Some(json!(null))), Ok(Some(json!(null))));
     }
