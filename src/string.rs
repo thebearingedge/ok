@@ -75,7 +75,7 @@ impl StringSchema {
         self
     }
 
-    pub fn pattern(mut self, pattern: &'static str) -> Self {
+    pub fn pattern(mut self, pattern: &str) -> Self {
         let regex = Regex::new(pattern).unwrap();
         self.validator.append(move |string| {
             if regex.is_match(string) {

@@ -24,48 +24,36 @@ impl ObjectSchema {
         }
     }
 
-    pub fn key(mut self, key: &'static str, schema: impl OkSchema + 'static) -> Self {
+    pub fn key(mut self, key: &str, schema: impl OkSchema + 'static) -> Self {
         self.property_schemas.insert(key.into(), Box::new(schema));
         self
     }
 
-    pub fn boolean(self, key: &'static str, build: fn(BooleanSchema) -> BooleanSchema) -> Self {
+    pub fn boolean(self, key: &str, build: fn(BooleanSchema) -> BooleanSchema) -> Self {
         self.key(key, build(BooleanSchema::new()))
     }
 
-    pub fn integer(
-        self,
-        key: &'static str,
-        build: fn(NumberSchema<i64>) -> NumberSchema<i64>,
-    ) -> Self {
+    pub fn integer(self, key: &str, build: fn(NumberSchema<i64>) -> NumberSchema<i64>) -> Self {
         self.key(key, build(NumberSchema::new(JsonType::Integer)))
     }
 
-    pub fn float(
-        self,
-        key: &'static str,
-        build: fn(NumberSchema<f64>) -> NumberSchema<f64>,
-    ) -> Self {
+    pub fn float(self, key: &str, build: fn(NumberSchema<f64>) -> NumberSchema<f64>) -> Self {
         self.key(key, build(NumberSchema::new(JsonType::Float)))
     }
 
-    pub fn unsigned(
-        self,
-        key: &'static str,
-        build: fn(NumberSchema<u64>) -> NumberSchema<u64>,
-    ) -> Self {
+    pub fn unsigned(self, key: &str, build: fn(NumberSchema<u64>) -> NumberSchema<u64>) -> Self {
         self.key(key, build(NumberSchema::new(JsonType::Unsigned)))
     }
 
-    pub fn string(self, key: &'static str, build: fn(StringSchema) -> StringSchema) -> Self {
+    pub fn string(self, key: &str, build: fn(StringSchema) -> StringSchema) -> Self {
         self.key(key, build(StringSchema::new()))
     }
 
-    pub fn object(self, key: &'static str, build: fn(ObjectSchema) -> ObjectSchema) -> Self {
+    pub fn object(self, key: &str, build: fn(ObjectSchema) -> ObjectSchema) -> Self {
         self.key(key, build(ObjectSchema::new()))
     }
 
-    pub fn array(self, key: &'static str, build: fn(ArraySchema) -> ArraySchema) -> Self {
+    pub fn array(self, key: &str, build: fn(ArraySchema) -> ArraySchema) -> Self {
         self.key(key, build(ArraySchema::new()))
     }
 }
