@@ -1,5 +1,5 @@
 use super::{
-    error::{self, Result, ValidationError},
+    error::{field_error, type_error, Result, ValidationError},
     json::{from_json, to_json, Json, JsonType},
     Test,
 };
@@ -40,31 +40,29 @@ impl<T: DeserializeOwned + Serialize> Validator<T> {
         self.transforms.push(transform);
     }
 
-    pub fn exec(&self, value: Option<Json>) -> Result<Option<Json>> {
+    pub fn exec(&self, path: &str, value: Option<Json>) -> Result<Option<Json>> {
+        let label = self.label.unwrap_or(path);
         let json_type = self.json_type;
-        let value_type = JsonType::from(&value);
-        let json = match value {
+        let coerce = match value {
             None if self.is_optional => return Ok(None),
-            None => return Err(error::type_error(json_type, value_type)),
+            None => Err(type_error(label, json_type)),
             Some(Json::Null) if self.is_nullable => return Ok(Some(Json::Null)),
-            Some(Json::Null) => return Err(error::type_error(json_type, value_type)),
-            Some(json) => json_type.coerce(json)?,
+            Some(json) => json_type.coerce(label, json),
         };
-        let t = match from_json(json) {
-            Ok(t) => self
+        coerce.and_then(|json| {
+            let t = self
                 .transforms
                 .iter()
-                .fold(t, |transformed, transform| transform(transformed)),
-            Err(_) => return Err(error::type_error(json_type, value_type)),
-        };
-        let errors = self
-            .tests
-            .iter()
-            .filter_map(|test| test.check(&t).err())
-            .collect::<Vec<ValidationError>>();
-        if errors.is_empty() {
-            return Ok(Some(to_json(t).unwrap()));
-        }
-        Err(error::field_error(errors))
+                .fold(from_json(json).unwrap(), |t, transform| transform(t));
+            let errors = self
+                .tests
+                .iter()
+                .filter_map(|test| test.check(label, &t).err())
+                .collect::<Vec<ValidationError>>();
+            if errors.is_empty() {
+                return Ok(Some(to_json(t).unwrap()));
+            }
+            Err(field_error(errors))
+        })
     }
 }

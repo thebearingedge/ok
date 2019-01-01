@@ -1,4 +1,4 @@
-use super::error::{self, Result};
+use super::error::{type_error, Result};
 pub use serde_json::{
     from_value as from_json, map::Map, to_string, to_value as to_json, Value as Json,
 };
@@ -22,7 +22,7 @@ pub enum JsonType {
 }
 
 impl JsonType {
-    pub fn coerce(&self, json: Json) -> Result<Json> {
+    pub fn coerce(&self, label: &str, json: Json) -> Result<Json> {
         match self {
             JsonType::Boolean => {
                 if json.is_boolean() {
@@ -32,10 +32,10 @@ impl JsonType {
                     return match json.as_str().unwrap() {
                         "true" => Ok(Json::Bool(true)),
                         "false" => Ok(Json::Bool(false)),
-                        _ => Err(error::type_error(JsonType::Boolean, JsonType::String)),
+                        _ => Err(type_error(label, JsonType::Boolean)),
                     };
                 }
-                Err(error::type_error(JsonType::Boolean, (&Some(json)).into()))
+                Err(type_error(label, JsonType::Boolean))
             }
             JsonType::Integer => {
                 if json.is_i64() {
@@ -46,23 +46,20 @@ impl JsonType {
                     if float.fract() == 0.0 {
                         return Ok(to_json::<i64>(float as i64).unwrap());
                     }
-                    return Err(error::type_error(JsonType::Integer, JsonType::Float));
                 }
                 if json.is_u64() {
                     let unsigned = json.as_u64().unwrap();
                     if unsigned <= std::i64::MAX as u64 {
                         return Ok(json);
                     }
-                    return Err(error::type_error(JsonType::Integer, JsonType::Unsigned));
                 }
                 if json.is_string() {
                     let string = json.as_str().unwrap();
-                    return match string.parse::<i64>() {
-                        Ok(integer) => Ok(to_json(integer).unwrap()),
-                        Err(_) => Err(error::type_error(JsonType::Integer, JsonType::String)),
-                    };
+                    if let Ok(integer) = string.parse::<i64>() {
+                        return Ok(to_json(integer).unwrap());
+                    }
                 }
-                Err(error::type_error(JsonType::Integer, (&Some(json)).into()))
+                Err(type_error(label, JsonType::Integer))
             }
             JsonType::Unsigned => {
                 if json.is_u64() {
@@ -73,23 +70,20 @@ impl JsonType {
                     if float >= 0.0 && float.fract() == 0.0 {
                         return Ok(to_json::<u64>(float as u64).unwrap());
                     }
-                    return Err(error::type_error(JsonType::Unsigned, JsonType::Float));
                 }
                 if json.is_i64() {
                     let integer = json.as_i64().unwrap();
                     if integer >= 0 {
                         return Ok(to_json::<u64>(integer as u64).unwrap());
                     }
-                    return Err(error::type_error(JsonType::Unsigned, JsonType::Integer));
                 }
                 if json.is_string() {
                     let string = json.as_str().unwrap();
-                    return match string.parse::<u64>() {
-                        Ok(unsigned) => Ok(to_json(unsigned).unwrap()),
-                        Err(_) => Err(error::type_error(JsonType::Unsigned, JsonType::String)),
-                    };
+                    if let Ok(unsigned) = string.parse::<u64>() {
+                        return Ok(to_json(unsigned).unwrap());
+                    }
                 }
-                Err(error::type_error(JsonType::Unsigned, (&Some(json)).into()))
+                Err(type_error(label, JsonType::Unsigned))
             }
             JsonType::Float => {
                 if json.is_f64() || json.is_i64() {
@@ -100,16 +94,14 @@ impl JsonType {
                     if unsigned <= std::f64::MAX as u64 {
                         return Ok(to_json::<f64>(unsigned as f64).unwrap());
                     }
-                    return Err(error::type_error(JsonType::Float, JsonType::Unsigned));
                 }
                 if json.is_string() {
                     let string = json.as_str().unwrap();
-                    return match string.parse::<f64>() {
-                        Ok(float) => Ok(to_json(float).unwrap()),
-                        Err(_) => Err(error::type_error(JsonType::Float, JsonType::String)),
-                    };
+                    if let Ok(float) = string.parse::<f64>() {
+                        return Ok(to_json(float).unwrap());
+                    }
                 }
-                Err(error::type_error(JsonType::Float, (&Some(json)).into()))
+                Err(type_error(label, JsonType::Float))
             }
             JsonType::String => {
                 if json.is_string() {
@@ -118,7 +110,19 @@ impl JsonType {
                 if json.is_boolean() || json.is_number() {
                     return Ok(to_json(json.to_string()).unwrap());
                 }
-                Err(error::type_error(JsonType::String, (&Some(json)).into()))
+                Err(type_error(label, JsonType::String))
+            }
+            JsonType::Array => {
+                if json.is_array() {
+                    return Ok(json);
+                }
+                Err(type_error(label, JsonType::Array))
+            }
+            JsonType::Object => {
+                if json.is_object() {
+                    return Ok(json);
+                }
+                Err(type_error(label, JsonType::Object))
             }
             _ => Ok(json),
         }

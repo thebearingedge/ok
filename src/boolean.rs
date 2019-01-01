@@ -37,8 +37,8 @@ impl OkSchema for BooleanSchema {
         self
     }
 
-    fn validate(&self, value: Option<Json>) -> Result<Option<Json>> {
-        self.validator.exec(value)
+    fn validate_at(&self, path: &str, value: Option<Json>) -> Result<Option<Json>> {
+        self.validator.exec(path, value)
     }
 }
 
@@ -48,7 +48,7 @@ pub fn boolean() -> BooleanSchema {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{boolean, error, json::JsonType, OkSchema};
+    use super::super::{boolean, error::type_error, json::JsonType, OkSchema};
     use serde_json::json;
 
     #[test]
@@ -63,27 +63,27 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!(null))),
-            Err(error::type_error(JsonType::Boolean, JsonType::Null))
+            Err(type_error("", JsonType::Boolean))
         );
         assert_eq!(
             schema.validate(None),
-            Err(error::type_error(JsonType::Boolean, JsonType::None))
+            Err(type_error("", JsonType::Boolean))
         );
         assert_eq!(
             schema.validate(Some(json!([]))),
-            Err(error::type_error(JsonType::Boolean, JsonType::Array))
+            Err(type_error("", JsonType::Boolean))
         );
         assert_eq!(
             schema.validate(Some(json!(1))),
-            Err(error::type_error(JsonType::Boolean, JsonType::Number))
+            Err(type_error("", JsonType::Boolean))
         );
         assert_eq!(
             schema.validate(Some(json!({}))),
-            Err(error::type_error(JsonType::Boolean, JsonType::Object))
+            Err(type_error("", JsonType::Boolean))
         );
         assert_eq!(
             schema.validate(Some(json!("foo"))),
-            Err(error::type_error(JsonType::Boolean, JsonType::String))
+            Err(type_error("", JsonType::Boolean))
         );
     }
 

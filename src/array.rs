@@ -1,5 +1,5 @@
 use super::{
-    error::{self, Result},
+    error::{array_error, Result},
     json::{from_json, Array, Json, JsonType},
     OkSchema, Validator,
 };
@@ -53,6 +53,7 @@ impl OkSchema for ArraySchema {
         self.validator.label = Some(label);
         self
     }
+
     fn desc(mut self, description: &'static str) -> Self {
         self.validator.description = Some(description);
         self
@@ -68,8 +69,8 @@ impl OkSchema for ArraySchema {
         self
     }
 
-    fn validate(&self, value: Option<Json>) -> Result<Option<Json>> {
-        let validated = self.validator.exec(value)?;
+    fn validate_at(&self, path: &str, value: Option<Json>) -> Result<Option<Json>> {
+        let validated = self.validator.exec(path, value)?;
         let elements = match validated {
             None => return Ok(None),
             Some(_) if self.element_schema.is_none() => return Ok(validated),
@@ -82,7 +83,8 @@ impl OkSchema for ArraySchema {
             .into_iter()
             .enumerate()
             .for_each(|(index, element)| {
-                match element_schema.validate(Some(element)) {
+                let path = format!("{}[{}]", path, index);
+                match element_schema.validate_at(path.as_str(), Some(element)) {
                     Ok(value) => {
                         if errors.is_empty() {
                             array.push(value.unwrap());
@@ -96,7 +98,7 @@ impl OkSchema for ArraySchema {
         if errors.is_empty() {
             return Ok(Some(array.into()));
         }
-        Err(error::array_error(errors))
+        Err(array_error(errors))
     }
 }
 
@@ -106,7 +108,13 @@ pub fn array() -> ArraySchema {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{array, boolean, error, integer, json::JsonType, object, string, OkSchema};
+    use super::super::{
+        array, boolean,
+        error::{array_error, field_error, test_error, type_error},
+        integer,
+        json::JsonType,
+        object, string, OkSchema,
+    };
     use maplit::hashmap;
     use serde_json::json;
 
@@ -116,27 +124,24 @@ mod tests {
         assert_eq!(schema.validate(Some(json!([]))), Ok(Some(json!([]))));
         assert_eq!(
             schema.validate(Some(json!(null))),
-            Err(error::type_error(JsonType::Array, JsonType::Null))
+            Err(type_error("", JsonType::Array))
         );
-        assert_eq!(
-            schema.validate(None),
-            Err(error::type_error(JsonType::Array, JsonType::None))
-        );
+        assert_eq!(schema.validate(None), Err(type_error("", JsonType::Array)));
         assert_eq!(
             schema.validate(Some(json!({}))),
-            Err(error::type_error(JsonType::Array, JsonType::Object))
+            Err(type_error("", JsonType::Array))
         );
         assert_eq!(
             schema.validate(Some(json!(1))),
-            Err(error::type_error(JsonType::Array, JsonType::Number))
+            Err(type_error("", JsonType::Array))
         );
         assert_eq!(
             schema.validate(Some(json!(true))),
-            Err(error::type_error(JsonType::Array, JsonType::Boolean))
+            Err(type_error("", JsonType::Array))
         );
         assert_eq!(
             schema.validate(Some(json!("foo"))),
-            Err(error::type_error(JsonType::Array, JsonType::String))
+            Err(type_error("", JsonType::Array))
         );
     }
 
@@ -163,13 +168,13 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!([]))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected Array with length between 1 and 3."
             )]))
         );
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz", "qux"]))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected Array with length between 1 and 3."
             )]))
         );
@@ -184,7 +189,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!(["foo"]))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected Array with length of at least 4."
             )]))
         );
@@ -199,7 +204,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz", "qux"]))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected Array with length of at most 3."
             )]))
         );
@@ -214,10 +219,10 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!([1, 2, 3]))),
-            Err(error::array_error(hashmap! {
-                0 => error::type_error(JsonType::Boolean, JsonType::Number),
-                1 => error::type_error(JsonType::Boolean, JsonType::Number),
-                2 => error::type_error(JsonType::Boolean, JsonType::Number)
+            Err(array_error(hashmap! {
+                0 => type_error("[0]", JsonType::Boolean),
+                1 => type_error("[1]", JsonType::Boolean),
+                2 => type_error("[2]", JsonType::Boolean)
             }))
         );
     }
@@ -231,10 +236,10 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz"]))),
-            Err(error::array_error(hashmap! {
-                0 => error::type_error(JsonType::Integer, JsonType::String),
-                1 => error::type_error(JsonType::Integer, JsonType::String),
-                2 => error::type_error(JsonType::Integer, JsonType::String)
+            Err(array_error(hashmap! {
+                0 => type_error("[0]", JsonType::Integer),
+                1 => type_error("[1]", JsonType::Integer),
+                2 => type_error("[2]", JsonType::Integer)
             }))
         );
     }
@@ -248,10 +253,10 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!([null, null, null]))),
-            Err(error::array_error(hashmap! {
-                0 => error::type_error(JsonType::String, JsonType::Null),
-                1 => error::type_error(JsonType::String, JsonType::Null),
-                2 => error::type_error(JsonType::String, JsonType::Null)
+            Err(array_error(hashmap! {
+                0 => type_error("[0]", JsonType::String),
+                1 => type_error("[1]", JsonType::String),
+                2 => type_error("[2]", JsonType::String)
             }))
         );
     }
@@ -265,10 +270,10 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz"]))),
-            Err(error::array_error(hashmap! {
-                0 => error::type_error(JsonType::Object, JsonType::String),
-                1 => error::type_error(JsonType::Object, JsonType::String),
-                2 => error::type_error(JsonType::Object, JsonType::String)
+            Err(array_error(hashmap! {
+                0 => type_error("[0]", JsonType::Object),
+                1 => type_error("[1]", JsonType::Object),
+                2 => type_error("[2]", JsonType::Object)
             }))
         );
     }
@@ -282,10 +287,10 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!([1, 2, 3]))),
-            Err(error::array_error(hashmap! {
-                0 => error::type_error(JsonType::Array, JsonType::Number),
-                1 => error::type_error(JsonType::Array, JsonType::Number),
-                2 => error::type_error(JsonType::Array, JsonType::Number)
+            Err(array_error(hashmap! {
+                0 => type_error("[0]", JsonType::Array),
+                1 => type_error("[1]", JsonType::Array),
+                2 => type_error("[2]", JsonType::Array)
             }))
         );
     }

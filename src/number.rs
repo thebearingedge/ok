@@ -92,8 +92,8 @@ impl<N: Number> OkSchema for NumberSchema<N> {
         self
     }
 
-    fn validate(&self, value: Option<Json>) -> Result<Option<Json>> {
-        self.validator.exec(value)
+    fn validate_at(&self, path: &str, value: Option<Json>) -> Result<Option<Json>> {
+        self.validator.exec(path, value)
     }
 }
 
@@ -111,7 +111,12 @@ pub fn unsigned() -> NumberSchema<u64> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{error, float, integer, json::JsonType, unsigned, OkSchema};
+    use super::super::{
+        error::{field_error, test_error, type_error},
+        float, integer,
+        json::JsonType,
+        unsigned, OkSchema,
+    };
     use serde_json::json;
 
     #[test]
@@ -125,35 +130,35 @@ mod tests {
         assert_eq!(schema.validate(Some(json!("-1"))), Ok(Some(json!(-1))));
         assert_eq!(
             schema.validate(Some(json!(1.1))),
-            Err(error::type_error(JsonType::Integer, JsonType::Float))
+            Err(type_error("", JsonType::Integer))
         );
         assert_eq!(
             schema.validate(Some(json!(std::i64::MAX as u64 + 1))),
-            Err(error::type_error(JsonType::Integer, JsonType::Unsigned))
+            Err(type_error("", JsonType::Integer))
         );
         assert_eq!(
             schema.validate(Some(json!(null))),
-            Err(error::type_error(JsonType::Integer, JsonType::Null))
+            Err(type_error("", JsonType::Integer))
         );
         assert_eq!(
             schema.validate(None),
-            Err(error::type_error(JsonType::Integer, JsonType::None))
+            Err(type_error("", JsonType::Integer))
         );
         assert_eq!(
             schema.validate(Some(json!([]))),
-            Err(error::type_error(JsonType::Integer, JsonType::Array))
+            Err(type_error("", JsonType::Integer))
         );
         assert_eq!(
             schema.validate(Some(json!(true))),
-            Err(error::type_error(JsonType::Integer, JsonType::Boolean))
+            Err(type_error("", JsonType::Integer))
         );
         assert_eq!(
             schema.validate(Some(json!({}))),
-            Err(error::type_error(JsonType::Integer, JsonType::Object))
+            Err(type_error("", JsonType::Integer))
         );
         assert_eq!(
             schema.validate(Some(json!("foo"))),
-            Err(error::type_error(JsonType::Integer, JsonType::String))
+            Err(type_error("", JsonType::Integer))
         );
     }
 
@@ -165,39 +170,39 @@ mod tests {
         assert_eq!(schema.validate(Some(json!("1"))), Ok(Some(json!(1))));
         assert_eq!(
             schema.validate(Some(json!(1.1))),
-            Err(error::type_error(JsonType::Unsigned, JsonType::Float))
+            Err(type_error("", JsonType::Unsigned))
         );
         assert_eq!(
             schema.validate(Some(json!(-1.0))),
-            Err(error::type_error(JsonType::Unsigned, JsonType::Float))
+            Err(type_error("", JsonType::Unsigned))
         );
         assert_eq!(
             schema.validate(Some(json!(-1))),
-            Err(error::type_error(JsonType::Unsigned, JsonType::Integer))
+            Err(type_error("", JsonType::Unsigned))
         );
         assert_eq!(
             schema.validate(Some(json!(null))),
-            Err(error::type_error(JsonType::Unsigned, JsonType::Null))
+            Err(type_error("", JsonType::Unsigned))
         );
         assert_eq!(
             schema.validate(None),
-            Err(error::type_error(JsonType::Unsigned, JsonType::None))
+            Err(type_error("", JsonType::Unsigned))
         );
         assert_eq!(
             schema.validate(Some(json!([]))),
-            Err(error::type_error(JsonType::Unsigned, JsonType::Array))
+            Err(type_error("", JsonType::Unsigned))
         );
         assert_eq!(
             schema.validate(Some(json!(true))),
-            Err(error::type_error(JsonType::Unsigned, JsonType::Boolean))
+            Err(type_error("", JsonType::Unsigned))
         );
         assert_eq!(
             schema.validate(Some(json!({}))),
-            Err(error::type_error(JsonType::Unsigned, JsonType::Object))
+            Err(type_error("", JsonType::Unsigned))
         );
         assert_eq!(
             schema.validate(Some(json!("foo"))),
-            Err(error::type_error(JsonType::Unsigned, JsonType::String))
+            Err(type_error("", JsonType::Unsigned))
         );
     }
 
@@ -214,31 +219,28 @@ mod tests {
         assert_eq!(schema.validate(Some(json!("-1.0"))), Ok(Some(json!(-1.0))));
         assert_eq!(
             schema.validate(Some(json!(std::i64::MAX as u64 + 1))),
-            Err(error::type_error(JsonType::Float, JsonType::Unsigned))
+            Err(type_error("", JsonType::Float))
         );
         assert_eq!(
             schema.validate(Some(json!(null))),
-            Err(error::type_error(JsonType::Float, JsonType::Null))
+            Err(type_error("", JsonType::Float))
         );
-        assert_eq!(
-            schema.validate(None),
-            Err(error::type_error(JsonType::Float, JsonType::None))
-        );
+        assert_eq!(schema.validate(None), Err(type_error("", JsonType::Float)));
         assert_eq!(
             schema.validate(Some(json!([]))),
-            Err(error::type_error(JsonType::Float, JsonType::Array))
+            Err(type_error("", JsonType::Float))
         );
         assert_eq!(
             schema.validate(Some(json!(true))),
-            Err(error::type_error(JsonType::Float, JsonType::Boolean))
+            Err(type_error("", JsonType::Float))
         );
         assert_eq!(
             schema.validate(Some(json!({}))),
-            Err(error::type_error(JsonType::Float, JsonType::Object))
+            Err(type_error("", JsonType::Float))
         );
         assert_eq!(
             schema.validate(Some(json!("foo"))),
-            Err(error::type_error(JsonType::Float, JsonType::String))
+            Err(type_error("", JsonType::Float))
         );
     }
 
@@ -272,19 +274,19 @@ mod tests {
         assert_eq!(f.validate(Some(json!(6.0))), Ok(Some(json!(6.0))));
         assert_eq!(
             u.validate(Some(json!(4))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected Unsigned Integer value of at least 5."
             )]))
         );
         assert_eq!(
             i.validate(Some(json!(4))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected Integer value of at least 5."
             )]))
         );
         assert_eq!(
             f.validate(Some(json!(4.0))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected Float value of at least 5."
             )]))
         );
@@ -300,19 +302,19 @@ mod tests {
         assert_eq!(f.validate(Some(json!(4.0))), Ok(Some(json!(4.0))));
         assert_eq!(
             u.validate(Some(json!(6))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected Unsigned Integer value of at most 5."
             )]))
         );
         assert_eq!(
             i.validate(Some(json!(6))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected Integer value of at most 5."
             )]))
         );
         assert_eq!(
             f.validate(Some(json!(6.0))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected Float value of at most 5."
             )]))
         );
@@ -328,19 +330,19 @@ mod tests {
         assert_eq!(f.validate(Some(json!(6.0))), Ok(Some(json!(6.0))));
         assert_eq!(
             u.validate(Some(json!(5))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected Unsigned Integer value greater than 5."
             )]))
         );
         assert_eq!(
             i.validate(Some(json!(5))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected Integer value greater than 5."
             )]))
         );
         assert_eq!(
             f.validate(Some(json!(5.0))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected Float value greater than 5."
             )]))
         );
@@ -356,19 +358,19 @@ mod tests {
         assert_eq!(f.validate(Some(json!(4.0))), Ok(Some(json!(4.0))));
         assert_eq!(
             u.validate(Some(json!(5))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected Unsigned Integer value less than 5."
             )]))
         );
         assert_eq!(
             i.validate(Some(json!(5))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected Integer value less than 5."
             )]))
         );
         assert_eq!(
             f.validate(Some(json!(5.0))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected Float value less than 5."
             )]))
         );

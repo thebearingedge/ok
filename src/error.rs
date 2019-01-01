@@ -12,8 +12,8 @@ pub enum ValidationError {
 
 pub type Result<T> = std::result::Result<T, ValidationError>;
 
-pub fn type_error(expected: JsonType, actual: JsonType) -> ValidationError {
-    ValidationError::Type(format!("Expected {}, but got {}.", expected, actual))
+pub fn type_error<L: std::fmt::Display>(label: L, json_type: JsonType) -> ValidationError {
+    ValidationError::Type(format!("{} must be of type `{}`.", label, json_type))
 }
 
 pub fn test_error<M: Into<String>>(message: M) -> ValidationError {

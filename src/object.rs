@@ -1,7 +1,7 @@
 use super::{
     array::ArraySchema,
     boolean::BooleanSchema,
-    error::{self, Result},
+    error::{object_error, Result},
     json::{from_json, Json, JsonType, Object},
     number::NumberSchema,
     string::StringSchema,
@@ -77,8 +77,8 @@ impl OkSchema for ObjectSchema {
         self
     }
 
-    fn validate(&self, value: Option<Json>) -> Result<Option<Json>> {
-        let validated = self.validator.exec(value)?;
+    fn validate_at(&self, path: &str, value: Option<Json>) -> Result<Option<Json>> {
+        let validated = self.validator.exec(path, value)?;
         let mut fields = match validated {
             None => return Ok(None),
             Some(_) if self.property_schemas.is_empty() => return Ok(validated),
@@ -87,7 +87,12 @@ impl OkSchema for ObjectSchema {
         let mut object = Object::new();
         let mut errors = HashMap::new();
         self.property_schemas.iter().for_each(|(key, schema)| {
-            match schema.validate(fields.remove(key)) {
+            let path = if path == "" {
+                key.to_string()
+            } else {
+                format!("{}.{}", path, key)
+            };
+            match schema.validate_at(path.as_str(), fields.remove(key)) {
                 Ok(None) => (),
                 Ok(Some(value)) => {
                     if errors.is_empty() {
@@ -102,7 +107,7 @@ impl OkSchema for ObjectSchema {
         if errors.is_empty() {
             return Ok(Some(object.into()));
         }
-        Err(error::object_error(errors))
+        Err(object_error(errors))
     }
 }
 
@@ -112,7 +117,11 @@ pub fn object() -> ObjectSchema {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{error, json::JsonType, object, OkSchema};
+    use super::super::{
+        error::{object_error, type_error},
+        json::JsonType,
+        object, OkSchema,
+    };
     use maplit::hashmap;
     use serde_json::json;
 
@@ -122,27 +131,24 @@ mod tests {
         assert_eq!(schema.validate(Some(json!({}))), Ok(Some(json!({}))));
         assert_eq!(
             schema.validate(Some(json!(null))),
-            Err(error::type_error(JsonType::Object, JsonType::Null))
+            Err(type_error("", JsonType::Object))
         );
-        assert_eq!(
-            schema.validate(None),
-            Err(error::type_error(JsonType::Object, JsonType::None))
-        );
+        assert_eq!(schema.validate(None), Err(type_error("", JsonType::Object)));
         assert_eq!(
             schema.validate(Some(json!([]))),
-            Err(error::type_error(JsonType::Object, JsonType::Array))
+            Err(type_error("", JsonType::Object))
         );
         assert_eq!(
             schema.validate(Some(json!(1))),
-            Err(error::type_error(JsonType::Object, JsonType::Number))
+            Err(type_error("", JsonType::Object))
         );
         assert_eq!(
             schema.validate(Some(json!(true))),
-            Err(error::type_error(JsonType::Object, JsonType::Boolean))
+            Err(type_error("", JsonType::Object))
         );
         assert_eq!(
             schema.validate(Some(json!("foo"))),
-            Err(error::type_error(JsonType::Object, JsonType::String))
+            Err(type_error("", JsonType::Object))
         );
     }
 
@@ -171,9 +177,9 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!({ "foo": "bar", "baz": true }))),
-            Err(error::object_error(hashmap! {
-                "foo".into() => error::type_error(JsonType::Boolean, JsonType::String),
-                "bar".into() => error::type_error(JsonType::Boolean, JsonType::None)
+            Err(object_error(hashmap! {
+                "foo".into() => type_error("foo", JsonType::Boolean),
+                "bar".into() => type_error("bar", JsonType::Boolean)
             }))
         );
     }
@@ -190,10 +196,10 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!({ "foo": "", "baz": null }))),
-            Err(error::object_error(hashmap! {
-                "foo".into() => error::type_error(JsonType::Integer, JsonType::String),
-                "bar".into() => error::type_error(JsonType::Float, JsonType::None),
-                "baz".into() => error::type_error(JsonType::Unsigned, JsonType::Null)
+            Err(object_error(hashmap! {
+                "foo".into() => type_error("foo", JsonType::Integer),
+                "bar".into() => type_error("bar", JsonType::Float),
+                "baz".into() => type_error("baz", JsonType::Unsigned)
             }))
         );
     }
@@ -209,9 +215,9 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!({ "foo": null, "baz": [] }))),
-            Err(error::object_error(hashmap! {
-                "foo".into() => error::type_error(JsonType::String, JsonType::Null),
-                "baz".into() => error::type_error(JsonType::String, JsonType::Array)
+            Err(object_error(hashmap! {
+                "foo".into() => type_error("foo", JsonType::String),
+                "baz".into() => type_error("baz", JsonType::String)
             }))
         );
     }
@@ -225,8 +231,8 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!({ "foo": true }))),
-            Err(error::object_error(hashmap! {
-                "foo".into() => error::type_error(JsonType::Object, JsonType::Boolean)
+            Err(object_error(hashmap! {
+                "foo".into() => type_error("foo", JsonType::Object)
             }))
         );
     }
@@ -240,8 +246,8 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!({ "foo": true }))),
-            Err(error::object_error(hashmap! {
-                "foo".into() => error::type_error(JsonType::Array, JsonType::Boolean)
+            Err(object_error(hashmap! {
+                "foo".into() => type_error("foo", JsonType::Array)
             }))
         );
     }

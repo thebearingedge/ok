@@ -1,4 +1,4 @@
-use super::error::{self, Result};
+use super::error::{test_error, Result};
 
 pub struct Test<T> {
     message: String,
@@ -13,10 +13,10 @@ impl<T> Test<T> {
         }
     }
 
-    pub fn check(&self, value: &T) -> Result<()> {
+    pub fn check(&self, label: &str, value: &T) -> Result<()> {
         match (self.test)(value)? {
             true => Ok(()),
-            false => Err(error::test_error(self.message.clone())),
+            false => Err(test_error(self.message.clone())),
         }
     }
 }

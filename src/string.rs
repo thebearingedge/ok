@@ -97,8 +97,8 @@ impl OkSchema for StringSchema {
         self
     }
 
-    fn validate(&self, value: Option<Json>) -> Result<Option<Json>> {
-        self.validator.exec(value)
+    fn validate_at(&self, path: &str, value: Option<Json>) -> Result<Option<Json>> {
+        self.validator.exec(path, value)
     }
 }
 
@@ -108,7 +108,11 @@ pub fn string() -> StringSchema {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{error, json::JsonType, string, OkSchema};
+    use super::super::{
+        error::{field_error, test_error, type_error},
+        json::JsonType,
+        string, OkSchema,
+    };
     use regex::RegexBuilder;
     use serde_json::json;
 
@@ -120,19 +124,16 @@ mod tests {
         assert_eq!(schema.validate(Some(json!(1))), Ok(Some(json!("1"))));
         assert_eq!(
             schema.validate(Some(json!(null))),
-            Err(error::type_error(JsonType::String, JsonType::Null))
+            Err(type_error("", JsonType::String))
         );
-        assert_eq!(
-            schema.validate(None),
-            Err(error::type_error(JsonType::String, JsonType::None))
-        );
+        assert_eq!(schema.validate(None), Err(type_error("", JsonType::String)));
         assert_eq!(
             schema.validate(Some(json!([]))),
-            Err(error::type_error(JsonType::String, JsonType::Array))
+            Err(type_error("", JsonType::String))
         );
         assert_eq!(
             schema.validate(Some(json!({}))),
-            Err(error::type_error(JsonType::String, JsonType::Object))
+            Err(type_error("", JsonType::String))
         );
     }
 
@@ -156,13 +157,13 @@ mod tests {
         assert_eq!(schema.validate(Some(json!("foo"))), Ok(Some(json!("foo"))));
         assert_eq!(
             schema.validate(Some(json!(""))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected String with length between 1 and 3."
             )]))
         );
         assert_eq!(
             schema.validate(Some(json!("quux"))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected String with length between 1 and 3."
             )]))
         );
@@ -177,7 +178,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!("qux"))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected String with length of at least 4."
             )]))
         );
@@ -189,7 +190,7 @@ mod tests {
         assert_eq!(schema.validate(Some(json!("qux"))), Ok(Some(json!("qux"))));
         assert_eq!(
             schema.validate(Some(json!("quux"))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected String with length of at most 3."
             )]))
         );
@@ -225,7 +226,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!("Barfoo"))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected String to match pattern '(?i)^foo'."
             )]))
         )
@@ -241,7 +242,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!("Barfoo"))),
-            Err(error::field_error(vec![error::test_error(
+            Err(field_error(vec![test_error(
                 "Expected String to match pattern '(?i)^foo'."
             )]))
         )

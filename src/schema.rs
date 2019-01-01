@@ -17,5 +17,9 @@ pub trait OkSchema {
     where
         Self: Sized;
 
-    fn validate(&self, value: Option<Json>) -> Result<Option<Json>>;
+    fn validate_at(&self, path: &str, value: Option<Json>) -> Result<Option<Json>>;
+
+    fn validate(&self, value: Option<Json>) -> Result<Option<Json>> {
+        self.validate_at("".into(), value)
+    }
 }
