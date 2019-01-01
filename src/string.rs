@@ -43,7 +43,7 @@ impl StringSchema {
         self
     }
 
-    pub fn pattern(mut self, pattern: &str) -> Self {
+    pub fn matches(mut self, pattern: &str) -> Self {
         let regex = Regex::new(pattern).unwrap();
         self.validator.add_test(
             format!("<label> must match the pattern '{}'.", regex.as_str()),
@@ -200,8 +200,8 @@ mod tests {
     }
 
     #[test]
-    fn it_sets_a_regex_pattern() {
-        let schema = string().label("My String").pattern("(?i)^foo");
+    fn it_sets_a_regex_matches() {
+        let schema = string().label("My String").matches("(?i)^foo");
         assert_eq!(
             schema.validate(Some(json!("Foobar"))),
             Ok(Some(json!("Foobar")))
