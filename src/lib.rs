@@ -1,3 +1,7 @@
+#[cfg(test)]
+#[macro_use]
+extern crate pretty_assertions;
+
 mod array;
 mod boolean;
 mod error;
