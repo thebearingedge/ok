@@ -5,17 +5,17 @@ use super::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
-pub trait Number: Serialize + DeserializeOwned + PartialOrd + std::fmt::Display {}
-
-impl Number for i64 {}
-impl Number for u64 {}
-impl Number for f64 {}
-
-pub struct NumberSchema<N: Number> {
+pub struct NumberSchema<N>
+where
+    N: Serialize + DeserializeOwned + PartialOrd + std::fmt::Display,
+{
     validator: Validator<N>,
 }
 
-impl<N: Number> NumberSchema<N> {
+impl<N> NumberSchema<N>
+where
+    N: Serialize + DeserializeOwned + PartialOrd + std::fmt::Display,
+{
     pub fn new(json_type: JsonType) -> Self {
         NumberSchema {
             validator: Validator::new(json_type),
@@ -67,7 +67,10 @@ impl<N: Number> NumberSchema<N> {
     }
 }
 
-impl<N: Number> OkSchema for NumberSchema<N> {
+impl<N> OkSchema for NumberSchema<N>
+where
+    N: Serialize + DeserializeOwned + PartialOrd + std::fmt::Display,
+{
     fn label(mut self, label: &'static str) -> Self {
         self.validator.label = Some(label);
         self
