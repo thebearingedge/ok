@@ -18,7 +18,10 @@ impl StringSchema {
 
     pub fn length(mut self, (min, max): (usize, usize)) -> Self {
         self.validator.add_test(
-            format!("Expected String with length between {} and {}.", min, max),
+            format!(
+                "<label> must be between {} and {} characters long.",
+                min, max
+            ),
             move |string| Ok(string.len() >= min && string.len() <= max),
         );
         self
@@ -26,7 +29,7 @@ impl StringSchema {
 
     pub fn min_length(mut self, min: usize) -> Self {
         self.validator.add_test(
-            format!("Expected String with length of at least {}.", min),
+            format!("<label> must be at least {} characters long.", min),
             move |string| Ok(string.len() >= min),
         );
         self
@@ -34,7 +37,7 @@ impl StringSchema {
 
     pub fn max_length(mut self, max: usize) -> Self {
         self.validator.add_test(
-            format!("Expected String with length of at most {}.", max),
+            format!("<label> must be at most {} characters long.", max),
             move |string| Ok(string.len() <= max),
         );
         self
@@ -43,7 +46,7 @@ impl StringSchema {
     pub fn pattern(mut self, pattern: &str) -> Self {
         let regex = Regex::new(pattern).unwrap();
         self.validator.add_test(
-            format!("Expected String to match pattern '{}'.", regex.as_str()),
+            format!("<label> must match the pattern '{}'.", regex.as_str()),
             move |string| Ok(regex.is_match(string)),
         );
         self
@@ -51,7 +54,7 @@ impl StringSchema {
 
     pub fn regex(mut self, regex: Regex) -> Self {
         self.validator.add_test(
-            format!("Expected String to match pattern '{}'.", regex.as_str()),
+            format!("<label> must match the pattern '{}'.", regex.as_str()),
             move |string| Ok(regex.is_match(string)),
         );
         self
@@ -153,25 +156,25 @@ mod tests {
 
     #[test]
     fn it_sets_a_minimum_and_maximum_length() {
-        let schema = string().length((1, 3));
+        let schema = string().label("My String").length((1, 3));
         assert_eq!(schema.validate(Some(json!("foo"))), Ok(Some(json!("foo"))));
         assert_eq!(
             schema.validate(Some(json!(""))),
             Err(field_error(vec![test_error(
-                "Expected String with length between 1 and 3."
+                "My String must be between 1 and 3 characters long."
             )]))
         );
         assert_eq!(
             schema.validate(Some(json!("quux"))),
             Err(field_error(vec![test_error(
-                "Expected String with length between 1 and 3."
+                "My String must be between 1 and 3 characters long."
             )]))
         );
     }
 
     #[test]
     fn it_sets_a_minimum_length() {
-        let schema = string().min_length(4);
+        let schema = string().label("My String").min_length(4);
         assert_eq!(
             schema.validate(Some(json!("quux"))),
             Ok(Some(json!("quux")))
@@ -179,21 +182,52 @@ mod tests {
         assert_eq!(
             schema.validate(Some(json!("qux"))),
             Err(field_error(vec![test_error(
-                "Expected String with length of at least 4."
+                "My String must be at least 4 characters long."
             )]))
         );
     }
 
     #[test]
     fn it_sets_a_maximum_length() {
-        let schema = string().max_length(3);
+        let schema = string().label("My String").max_length(3);
         assert_eq!(schema.validate(Some(json!("qux"))), Ok(Some(json!("qux"))));
         assert_eq!(
             schema.validate(Some(json!("quux"))),
             Err(field_error(vec![test_error(
-                "Expected String with length of at most 3."
+                "My String must be at most 3 characters long."
             )]))
         );
+    }
+
+    #[test]
+    fn it_sets_a_regex_pattern() {
+        let schema = string().label("My String").pattern("(?i)^foo");
+        assert_eq!(
+            schema.validate(Some(json!("Foobar"))),
+            Ok(Some(json!("Foobar")))
+        );
+        assert_eq!(
+            schema.validate(Some(json!("Barfoo"))),
+            Err(field_error(vec![test_error(
+                "My String must match the pattern '(?i)^foo'."
+            )]))
+        )
+    }
+
+    #[test]
+    fn it_sets_a_regex_object() {
+        let regex = RegexBuilder::new("(?i)^foo").build().unwrap();
+        let schema = string().label("My String").regex(regex);
+        assert_eq!(
+            schema.validate(Some(json!("Foobar"))),
+            Ok(Some(json!("Foobar")))
+        );
+        assert_eq!(
+            schema.validate(Some(json!("Barfoo"))),
+            Err(field_error(vec![test_error(
+                "My String must match the pattern '(?i)^foo'."
+            )]))
+        )
     }
 
     #[test]
@@ -217,34 +251,4 @@ mod tests {
         assert_eq!(schema.validate(Some(json!("FOO"))), Ok(Some(json!("foo"))));
     }
 
-    #[test]
-    fn it_sets_a_regex_pattern() {
-        let schema = string().pattern("(?i)^foo");
-        assert_eq!(
-            schema.validate(Some(json!("Foobar"))),
-            Ok(Some(json!("Foobar")))
-        );
-        assert_eq!(
-            schema.validate(Some(json!("Barfoo"))),
-            Err(field_error(vec![test_error(
-                "Expected String to match pattern '(?i)^foo'."
-            )]))
-        )
-    }
-
-    #[test]
-    fn it_sets_a_regex_object() {
-        let regex = RegexBuilder::new("(?i)^foo").build().unwrap();
-        let schema = string().regex(regex);
-        assert_eq!(
-            schema.validate(Some(json!("Foobar"))),
-            Ok(Some(json!("Foobar")))
-        );
-        assert_eq!(
-            schema.validate(Some(json!("Barfoo"))),
-            Err(field_error(vec![test_error(
-                "Expected String to match pattern '(?i)^foo'."
-            )]))
-        )
-    }
 }
