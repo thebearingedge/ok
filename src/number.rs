@@ -26,9 +26,8 @@ impl<N: Number> NumberSchema<N> {
     where
         N: 'static,
     {
-        let json_type = self.validator.json_type;
         self.validator.add_test(
-            format!("Expected {} value of at least {}.", json_type, min),
+            format!("<label> should be at least {}.", min),
             move |number| Ok(number >= &min),
         );
         self
@@ -38,9 +37,8 @@ impl<N: Number> NumberSchema<N> {
     where
         N: 'static,
     {
-        let json_type = self.validator.json_type;
         self.validator.add_test(
-            format!("Expected {} value of at most {}.", json_type, max),
+            format!("<label> should be at most {}.", max),
             move |number| Ok(number <= &max),
         );
         self
@@ -50,9 +48,8 @@ impl<N: Number> NumberSchema<N> {
     where
         N: 'static,
     {
-        let json_type = self.validator.json_type;
         self.validator.add_test(
-            format!("Expected {} value greater than {}.", json_type, limit),
+            format!("<label> should be greater than {}.", limit),
             move |number| Ok(number > &limit),
         );
         self
@@ -62,9 +59,8 @@ impl<N: Number> NumberSchema<N> {
     where
         N: 'static,
     {
-        let json_type = self.validator.json_type;
         self.validator.add_test(
-            format!("Expected {} value less than {}.", json_type, limit),
+            format!("<label> should be less than {}.", limit),
             move |number| Ok(number < &limit),
         );
         self
@@ -266,113 +262,95 @@ mod tests {
 
     #[test]
     fn it_sets_a_minimum_value() {
-        let u = unsigned().min(5);
-        let i = integer().min(5);
-        let f = float().min(5.0);
+        let u = unsigned().label("u64").min(5);
+        let i = integer().label("i64").min(5);
+        let f = float().label("f64").min(5.0);
         assert_eq!(u.validate(Some(json!(6))), Ok(Some(json!(6))));
         assert_eq!(i.validate(Some(json!(6))), Ok(Some(json!(6))));
         assert_eq!(f.validate(Some(json!(6.0))), Ok(Some(json!(6.0))));
         assert_eq!(
             u.validate(Some(json!(4))),
-            Err(field_error(vec![test_error(
-                "Expected Unsigned Integer value of at least 5."
-            )]))
+            Err(field_error(vec![test_error("u64 should be at least 5.")]))
         );
         assert_eq!(
             i.validate(Some(json!(4))),
-            Err(field_error(vec![test_error(
-                "Expected Integer value of at least 5."
-            )]))
+            Err(field_error(vec![test_error("i64 should be at least 5.")]))
         );
         assert_eq!(
             f.validate(Some(json!(4.0))),
-            Err(field_error(vec![test_error(
-                "Expected Float value of at least 5."
-            )]))
+            Err(field_error(vec![test_error("f64 should be at least 5.")]))
         );
     }
 
     #[test]
     fn it_sets_a_maximum_value() {
-        let u = unsigned().max(5);
-        let i = integer().max(5);
-        let f = float().max(5.0);
+        let u = unsigned().label("u64").max(5);
+        let i = integer().label("i64").max(5);
+        let f = float().label("f64").max(5.0);
         assert_eq!(u.validate(Some(json!(4))), Ok(Some(json!(4))));
         assert_eq!(i.validate(Some(json!(4))), Ok(Some(json!(4))));
         assert_eq!(f.validate(Some(json!(4.0))), Ok(Some(json!(4.0))));
         assert_eq!(
             u.validate(Some(json!(6))),
-            Err(field_error(vec![test_error(
-                "Expected Unsigned Integer value of at most 5."
-            )]))
+            Err(field_error(vec![test_error("u64 should be at most 5.")]))
         );
         assert_eq!(
             i.validate(Some(json!(6))),
-            Err(field_error(vec![test_error(
-                "Expected Integer value of at most 5."
-            )]))
+            Err(field_error(vec![test_error("i64 should be at most 5.")]))
         );
         assert_eq!(
             f.validate(Some(json!(6.0))),
-            Err(field_error(vec![test_error(
-                "Expected Float value of at most 5."
-            )]))
+            Err(field_error(vec![test_error("f64 should be at most 5.")]))
         );
     }
 
     #[test]
     fn it_sets_a_lower_limit() {
-        let u = unsigned().greater_than(5);
-        let i = integer().greater_than(5);
-        let f = float().greater_than(5.0);
+        let u = unsigned().label("u64").greater_than(5);
+        let i = integer().label("i64").greater_than(5);
+        let f = float().label("f64").greater_than(5.0);
         assert_eq!(u.validate(Some(json!(6))), Ok(Some(json!(6))));
         assert_eq!(i.validate(Some(json!(6))), Ok(Some(json!(6))));
         assert_eq!(f.validate(Some(json!(6.0))), Ok(Some(json!(6.0))));
         assert_eq!(
             u.validate(Some(json!(5))),
             Err(field_error(vec![test_error(
-                "Expected Unsigned Integer value greater than 5."
+                "u64 should be greater than 5."
             )]))
         );
         assert_eq!(
             i.validate(Some(json!(5))),
             Err(field_error(vec![test_error(
-                "Expected Integer value greater than 5."
+                "i64 should be greater than 5."
             )]))
         );
         assert_eq!(
             f.validate(Some(json!(5.0))),
             Err(field_error(vec![test_error(
-                "Expected Float value greater than 5."
+                "f64 should be greater than 5."
             )]))
         );
     }
 
     #[test]
     fn it_sets_an_upper_limit() {
-        let u = unsigned().less_than(5);
-        let i = integer().less_than(5);
-        let f = float().less_than(5.0);
+        let u = unsigned().label("u64").less_than(5);
+        let i = integer().label("i64").less_than(5);
+        let f = float().label("f64").less_than(5.0);
         assert_eq!(u.validate(Some(json!(4))), Ok(Some(json!(4))));
         assert_eq!(i.validate(Some(json!(4))), Ok(Some(json!(4))));
         assert_eq!(f.validate(Some(json!(4.0))), Ok(Some(json!(4.0))));
         assert_eq!(
             u.validate(Some(json!(5))),
-            Err(field_error(vec![test_error(
-                "Expected Unsigned Integer value less than 5."
-            )]))
+            Err(field_error(vec![test_error("u64 should be less than 5.")]))
         );
         assert_eq!(
             i.validate(Some(json!(5))),
-            Err(field_error(vec![test_error(
-                "Expected Integer value less than 5."
-            )]))
+            Err(field_error(vec![test_error("i64 should be less than 5.")]))
         );
         assert_eq!(
             f.validate(Some(json!(5.0))),
-            Err(field_error(vec![test_error(
-                "Expected Float value less than 5."
-            )]))
+            Err(field_error(vec![test_error("f64 should be less than 5.")]))
         );
     }
 }
