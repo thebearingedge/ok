@@ -20,7 +20,7 @@ impl ArraySchema {
 
     pub fn length(mut self, (min, max): (usize, usize)) -> Self {
         self.validator.add_test(
-            format!("Expected Array with length between {} and {}.", min, max),
+            format!("<label> must have length between {} and {}.", min, max),
             move |array| Ok(array.len() >= min && array.len() <= max),
         );
         self
@@ -28,7 +28,7 @@ impl ArraySchema {
 
     pub fn min_length(mut self, min: usize) -> Self {
         self.validator.add_test(
-            format!("Expected Array with length of at least {}.", min),
+            format!("<label> must contain at least {} elements.", min),
             move |array| Ok(array.len() >= min),
         );
         self
@@ -36,7 +36,7 @@ impl ArraySchema {
 
     pub fn max_length(mut self, max: usize) -> Self {
         self.validator.add_test(
-            format!("Expected Array with length of at most {}.", max),
+            format!("<label> may contain at most {} elements.", max),
             move |array| Ok(array.len() <= max),
         );
         self
@@ -161,7 +161,7 @@ mod tests {
 
     #[test]
     fn it_sets_a_minimum_and_maximum_length() {
-        let schema = array().length((1, 3));
+        let schema = array().label("My Array").length((1, 3));
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz"]))),
             Ok(Some(json!(["foo", "bar", "baz"])))
@@ -169,20 +169,20 @@ mod tests {
         assert_eq!(
             schema.validate(Some(json!([]))),
             Err(field_error(vec![test_error(
-                "Expected Array with length between 1 and 3."
+                "My Array must have length between 1 and 3."
             )]))
         );
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz", "qux"]))),
             Err(field_error(vec![test_error(
-                "Expected Array with length between 1 and 3."
+                "My Array must have length between 1 and 3."
             )]))
         );
     }
 
     #[test]
     fn it_sets_a_minimum_length() {
-        let schema = array().min_length(4);
+        let schema = array().label("My Array").min_length(4);
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz", "qux"]))),
             Ok(Some(json!(["foo", "bar", "baz", "qux"])))
@@ -190,14 +190,14 @@ mod tests {
         assert_eq!(
             schema.validate(Some(json!(["foo"]))),
             Err(field_error(vec![test_error(
-                "Expected Array with length of at least 4."
+                "My Array must contain at least 4 elements."
             )]))
         );
     }
 
     #[test]
     fn it_sets_a_maximum_length() {
-        let schema = array().max_length(3);
+        let schema = array().label("My Array").max_length(3);
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz"]))),
             Ok(Some(json!(["foo", "bar", "baz"])))
@@ -205,7 +205,7 @@ mod tests {
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz", "qux"]))),
             Err(field_error(vec![test_error(
-                "Expected Array with length of at most 3."
+                "My Array may contain at most 3 elements."
             )]))
         );
     }

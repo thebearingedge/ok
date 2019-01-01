@@ -16,7 +16,7 @@ impl<T> Test<T> {
     pub fn check(&self, label: &str, value: &T) -> Result<()> {
         match (self.test)(value)? {
             true => Ok(()),
-            false => Err(test_error(self.message.clone())),
+            false => Err(test_error(self.message.replace("<label>", label))),
         }
     }
 }
