@@ -40,6 +40,23 @@ impl StringSchema {
         self
     }
 
+    pub fn pattern(mut self, pattern: &str) -> Self {
+        let regex = Regex::new(pattern).unwrap();
+        self.validator.add_test(
+            format!("Expected String to match pattern '{}'.", regex.as_str()),
+            move |string| Ok(regex.is_match(string)),
+        );
+        self
+    }
+
+    pub fn regex(mut self, regex: Regex) -> Self {
+        self.validator.add_test(
+            format!("Expected String to match pattern '{}'.", regex.as_str()),
+            move |string| Ok(regex.is_match(string)),
+        );
+        self
+    }
+
     pub fn trim(mut self) -> Self {
         self.validator
             .add_transform(|string| string.trim().to_string());
@@ -55,23 +72,6 @@ impl StringSchema {
     pub fn lowercase(mut self) -> Self {
         self.validator
             .add_transform(|string| string.to_lowercase().to_string());
-        self
-    }
-
-    pub fn pattern(mut self, pattern: &str) -> Self {
-        let regex = Regex::new(pattern).unwrap();
-        self.validator.add_test(
-            format!("Expected String to match pattern '{}'.", regex.as_str()),
-            move |string| Ok(regex.is_match(string)),
-        );
-        self
-    }
-
-    pub fn regex(mut self, regex: Regex) -> Self {
-        self.validator.add_test(
-            format!("Expected String to match pattern '{}'.", regex.as_str()),
-            move |string| Ok(regex.is_match(string)),
-        );
         self
     }
 }
