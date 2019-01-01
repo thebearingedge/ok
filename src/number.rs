@@ -27,7 +27,7 @@ impl<N: Number> NumberSchema<N> {
         N: 'static,
     {
         self.validator.add_test(
-            format!("<label> should be at least {}.", min),
+            format!("<label> must be at least {}.", min),
             move |number| Ok(number >= &min),
         );
         self
@@ -37,10 +37,10 @@ impl<N: Number> NumberSchema<N> {
     where
         N: 'static,
     {
-        self.validator.add_test(
-            format!("<label> should be at most {}.", max),
-            move |number| Ok(number <= &max),
-        );
+        self.validator
+            .add_test(format!("<label> must be at most {}.", max), move |number| {
+                Ok(number <= &max)
+            });
         self
     }
 
@@ -49,7 +49,7 @@ impl<N: Number> NumberSchema<N> {
         N: 'static,
     {
         self.validator.add_test(
-            format!("<label> should be greater than {}.", limit),
+            format!("<label> must be greater than {}.", limit),
             move |number| Ok(number > &limit),
         );
         self
@@ -60,7 +60,7 @@ impl<N: Number> NumberSchema<N> {
         N: 'static,
     {
         self.validator.add_test(
-            format!("<label> should be less than {}.", limit),
+            format!("<label> must be less than {}.", limit),
             move |number| Ok(number < &limit),
         );
         self
@@ -270,15 +270,15 @@ mod tests {
         assert_eq!(f.validate(Some(json!(6.0))), Ok(Some(json!(6.0))));
         assert_eq!(
             u.validate(Some(json!(4))),
-            Err(field_error(vec![test_error("u64 should be at least 5.")]))
+            Err(field_error(vec![test_error("u64 must be at least 5.")]))
         );
         assert_eq!(
             i.validate(Some(json!(4))),
-            Err(field_error(vec![test_error("i64 should be at least 5.")]))
+            Err(field_error(vec![test_error("i64 must be at least 5.")]))
         );
         assert_eq!(
             f.validate(Some(json!(4.0))),
-            Err(field_error(vec![test_error("f64 should be at least 5.")]))
+            Err(field_error(vec![test_error("f64 must be at least 5.")]))
         );
     }
 
@@ -292,15 +292,15 @@ mod tests {
         assert_eq!(f.validate(Some(json!(4.0))), Ok(Some(json!(4.0))));
         assert_eq!(
             u.validate(Some(json!(6))),
-            Err(field_error(vec![test_error("u64 should be at most 5.")]))
+            Err(field_error(vec![test_error("u64 must be at most 5.")]))
         );
         assert_eq!(
             i.validate(Some(json!(6))),
-            Err(field_error(vec![test_error("i64 should be at most 5.")]))
+            Err(field_error(vec![test_error("i64 must be at most 5.")]))
         );
         assert_eq!(
             f.validate(Some(json!(6.0))),
-            Err(field_error(vec![test_error("f64 should be at most 5.")]))
+            Err(field_error(vec![test_error("f64 must be at most 5.")]))
         );
     }
 
@@ -314,21 +314,15 @@ mod tests {
         assert_eq!(f.validate(Some(json!(6.0))), Ok(Some(json!(6.0))));
         assert_eq!(
             u.validate(Some(json!(5))),
-            Err(field_error(vec![test_error(
-                "u64 should be greater than 5."
-            )]))
+            Err(field_error(vec![test_error("u64 must be greater than 5.")]))
         );
         assert_eq!(
             i.validate(Some(json!(5))),
-            Err(field_error(vec![test_error(
-                "i64 should be greater than 5."
-            )]))
+            Err(field_error(vec![test_error("i64 must be greater than 5.")]))
         );
         assert_eq!(
             f.validate(Some(json!(5.0))),
-            Err(field_error(vec![test_error(
-                "f64 should be greater than 5."
-            )]))
+            Err(field_error(vec![test_error("f64 must be greater than 5.")]))
         );
     }
 
@@ -342,15 +336,15 @@ mod tests {
         assert_eq!(f.validate(Some(json!(4.0))), Ok(Some(json!(4.0))));
         assert_eq!(
             u.validate(Some(json!(5))),
-            Err(field_error(vec![test_error("u64 should be less than 5.")]))
+            Err(field_error(vec![test_error("u64 must be less than 5.")]))
         );
         assert_eq!(
             i.validate(Some(json!(5))),
-            Err(field_error(vec![test_error("i64 should be less than 5.")]))
+            Err(field_error(vec![test_error("i64 must be less than 5.")]))
         );
         assert_eq!(
             f.validate(Some(json!(5.0))),
-            Err(field_error(vec![test_error("f64 should be less than 5.")]))
+            Err(field_error(vec![test_error("f64 must be less than 5.")]))
         );
     }
 }
