@@ -1,33 +1,44 @@
 use super::json::JsonType;
-use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
-pub enum ValidationError {
-    Type(String),
-    Test(String),
-    Field(Vec<ValidationError>),
-    Object(HashMap<String, ValidationError>),
-    Array(HashMap<usize, ValidationError>),
+pub struct ValidationError {
+    path: String,
+    message: String,
+    type_: &'static str,
+    inner: Vec<ValidationError>,
 }
 
 pub type Result<T> = std::result::Result<T, ValidationError>;
 
-pub fn type_error<L: std::fmt::Display>(label: L, json_type: JsonType) -> ValidationError {
-    ValidationError::Type(format!("{} must be of type `{}`.", label, json_type))
+pub type ValidationResult<T> = std::result::Result<T, ()>;
+
+pub fn type_error<L: std::fmt::Display>(
+    path: &str,
+    label: L,
+    jsontype_: JsonType,
+) -> ValidationError {
+    ValidationError {
+        path: path.into(),
+        type_: "type_error",
+        message: format!("{} must be of type `{}`.", label, jsontype_),
+        inner: vec![],
+    }
 }
 
-pub fn test_error<M: Into<String>>(message: M) -> ValidationError {
-    ValidationError::Test(message.into())
+pub fn test_error<S: Into<String>>(type_: &'static str, path: S, message: S) -> ValidationError {
+    ValidationError {
+        type_,
+        path: path.into(),
+        message: message.into(),
+        inner: vec![],
+    }
 }
 
-pub fn field_error(errors: Vec<ValidationError>) -> ValidationError {
-    ValidationError::Field(errors)
-}
-
-pub fn object_error(field_errors: HashMap<String, ValidationError>) -> ValidationError {
-    ValidationError::Object(field_errors)
-}
-
-pub fn array_error(field_errors: HashMap<usize, ValidationError>) -> ValidationError {
-    ValidationError::Array(field_errors)
+pub fn payload_error(all_errors: Vec<ValidationError>) -> ValidationError {
+    ValidationError {
+        path: "".into(),
+        inner: all_errors,
+        type_: "invalid_json",
+        message: "Validation failure.".into(),
+    }
 }

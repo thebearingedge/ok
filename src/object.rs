@@ -1,7 +1,7 @@
 use super::{
     array::ArraySchema,
     boolean::BooleanSchema,
-    error::{object_error, Result},
+    error::{ValidationError, ValidationResult},
     json::{from_json, Json, JsonType, Object},
     number::NumberSchema,
     string::StringSchema,
@@ -77,37 +77,43 @@ impl OkSchema for ObjectSchema {
         self
     }
 
-    fn validate_at(&self, path: &str, value: Option<Json>) -> Result<Option<Json>> {
-        let validated = self.validator.exec(path, value)?;
+    fn validate_at(
+        &self,
+        path: &str,
+        value: Option<Json>,
+        all_errors: &mut Vec<ValidationError>,
+    ) -> ValidationResult<Option<Json>> {
+        let mut errors = vec![];
+        let validated = self.validator.exec(path, value, &mut errors);
         let mut fields = match validated {
-            None => return Ok(None),
-            Some(_) if self.property_schemas.is_empty() => return Ok(validated),
-            Some(json) => from_json::<Object>(json).unwrap(),
+            Ok(None) => return Ok(None),
+            Ok(Some(json)) => {
+                if self.property_schemas.is_empty() {
+                    return Ok(Some(json));
+                }
+                from_json::<Object>(json).unwrap()
+            }
+            Err(_) => return Err(all_errors.append(&mut errors)),
         };
         let mut object = Object::new();
-        let mut errors = HashMap::new();
         self.property_schemas.iter().for_each(|(key, schema)| {
-            let path = if path == "" {
-                key.to_string()
-            } else {
-                format!("{}.{}", path, key)
+            let path = match path {
+                "" => key.to_string(),
+                path => format!("{}.{}", path, key),
             };
-            match schema.validate_at(path.as_str(), fields.remove(key)) {
-                Ok(None) => (),
+            match schema.validate_at(path.as_str(), fields.remove(key), &mut errors) {
+                Ok(None) | Err(_) => (),
                 Ok(Some(value)) => {
                     if errors.is_empty() {
                         object.insert(key.to_string(), value);
                     }
-                }
-                Err(error) => {
-                    errors.insert(key.to_string(), error);
                 }
             };
         });
         if errors.is_empty() {
             return Ok(Some(object.into()));
         }
-        Err(object_error(errors))
+        Err(all_errors.append(&mut errors))
     }
 }
 
@@ -118,11 +124,10 @@ pub fn object() -> ObjectSchema {
 #[cfg(test)]
 mod tests {
     use super::super::{
-        error::{object_error, type_error},
+        error::{payload_error, type_error},
         json::JsonType,
         object, OkSchema,
     };
-    use maplit::hashmap;
     use serde_json::json;
 
     #[test]
@@ -131,24 +136,27 @@ mod tests {
         assert_eq!(schema.validate(Some(json!({}))), Ok(Some(json!({}))));
         assert_eq!(
             schema.validate(Some(json!(null))),
-            Err(type_error("", JsonType::Object))
+            Err(payload_error(vec![type_error("", "", JsonType::Object)]))
         );
-        assert_eq!(schema.validate(None), Err(type_error("", JsonType::Object)));
+        assert_eq!(
+            schema.validate(None),
+            Err(payload_error(vec![type_error("", "", JsonType::Object)]))
+        );
         assert_eq!(
             schema.validate(Some(json!([]))),
-            Err(type_error("", JsonType::Object))
+            Err(payload_error(vec![type_error("", "", JsonType::Object)]))
         );
         assert_eq!(
             schema.validate(Some(json!(1))),
-            Err(type_error("", JsonType::Object))
+            Err(payload_error(vec![type_error("", "", JsonType::Object)]))
         );
         assert_eq!(
             schema.validate(Some(json!(true))),
-            Err(type_error("", JsonType::Object))
+            Err(payload_error(vec![type_error("", "", JsonType::Object)]))
         );
         assert_eq!(
             schema.validate(Some(json!("foo"))),
-            Err(type_error("", JsonType::Object))
+            Err(payload_error(vec![type_error("", "", JsonType::Object)]))
         );
     }
 
@@ -168,57 +176,80 @@ mod tests {
 
     #[test]
     fn it_validates_boolean_fields() {
-        let schema = object()
-            .boolean("foo", |field| field.desc("A Boolean value."))
-            .boolean("bar", |field| field.desc("Another Boolean value."));
+        let schema = object().boolean("foo", |field| field.desc("A Boolean value."));
         assert_eq!(
-            schema.validate(Some(json!({ "foo": true, "bar": false }))),
-            Ok(Some(json!({ "foo": true, "bar": false })))
+            schema.validate(Some(json!({ "foo": true }))),
+            Ok(Some(json!({ "foo": true })))
         );
         assert_eq!(
-            schema.validate(Some(json!({ "foo": "bar", "baz": true }))),
-            Err(object_error(hashmap! {
-                "foo".into() => type_error("foo", JsonType::Boolean),
-                "bar".into() => type_error("bar", JsonType::Boolean)
-            }))
+            schema.validate(Some(json!({ "foo": "bar" }))),
+            Err(payload_error(vec![type_error(
+                "foo",
+                "foo",
+                JsonType::Boolean
+            ),]))
         );
     }
 
     #[test]
     fn it_validates_number_fields() {
-        let schema = object()
-            .integer("foo", |field| field.desc("An integer."))
-            .float("bar", |field| field.desc("A float."))
-            .unsigned("baz", |field| field.desc("An unsigned."));
+        let schema = object().integer("foo", |field| field.desc("An integer."));
         assert_eq!(
-            schema.validate(Some(json!({ "foo": 1, "bar": 2.0, "baz": 3 }))),
-            Ok(Some(json!({ "foo": 1, "bar": 2.0, "baz": 3 })))
+            schema.validate(Some(json!({ "foo": 1 }))),
+            Ok(Some(json!({ "foo": 1 })))
         );
         assert_eq!(
-            schema.validate(Some(json!({ "foo": "", "baz": null }))),
-            Err(object_error(hashmap! {
-                "foo".into() => type_error("foo", JsonType::Integer),
-                "bar".into() => type_error("bar", JsonType::Float),
-                "baz".into() => type_error("baz", JsonType::Unsigned)
-            }))
+            schema.validate(Some(json!({ "foo": "" }))),
+            Err(payload_error(vec![type_error(
+                "foo",
+                "foo",
+                JsonType::Integer
+            )]))
+        );
+
+        let schema = object().float("foo", |field| field.desc("A float."));
+        assert_eq!(
+            schema.validate(Some(json!({ "foo": 1.0 }))),
+            Ok(Some(json!({ "foo": 1.0 })))
+        );
+        assert_eq!(
+            schema.validate(Some(json!({ "foo": "" }))),
+            Err(payload_error(vec![type_error(
+                "foo",
+                "foo",
+                JsonType::Float
+            )]))
+        );
+
+        let schema = object().unsigned("foo", |field| field.desc("An unsigned."));
+        assert_eq!(
+            schema.validate(Some(json!({ "foo": 1 }))),
+            Ok(Some(json!({ "foo": 1 })))
+        );
+        assert_eq!(
+            schema.validate(Some(json!({ "foo": "" }))),
+            Err(payload_error(vec![type_error(
+                "foo",
+                "foo",
+                JsonType::Unsigned
+            )]))
         );
     }
 
     #[test]
     fn it_validates_string_fields() {
-        let schema = object()
-            .string("foo", |field| field.desc("A String value."))
-            .string("baz", |field| field.desc("Another String value."));
+        let schema = object().string("foo", |field| field.desc("A String value."));
         assert_eq!(
-            schema.validate(Some(json!({ "foo": "bar", "baz": "qux" }))),
-            Ok(Some(json!({ "foo": "bar", "baz": "qux" })))
+            schema.validate(Some(json!({ "foo": "bar" }))),
+            Ok(Some(json!({ "foo": "bar" })))
         );
         assert_eq!(
-            schema.validate(Some(json!({ "foo": null, "baz": [] }))),
-            Err(object_error(hashmap! {
-                "foo".into() => type_error("foo", JsonType::String),
-                "baz".into() => type_error("baz", JsonType::String)
-            }))
+            schema.validate(Some(json!({ "foo": null }))),
+            Err(payload_error(vec![type_error(
+                "foo",
+                "foo",
+                JsonType::String
+            ),]))
         );
     }
 
@@ -231,9 +262,11 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!({ "foo": true }))),
-            Err(object_error(hashmap! {
-                "foo".into() => type_error("foo", JsonType::Object)
-            }))
+            Err(payload_error(vec![type_error(
+                "foo",
+                "foo",
+                JsonType::Object
+            )]))
         );
     }
 
@@ -246,9 +279,11 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!({ "foo": true }))),
-            Err(object_error(hashmap! {
-                "foo".into() => type_error("foo", JsonType::Array)
-            }))
+            Err(payload_error(vec![type_error(
+                "foo",
+                "foo",
+                JsonType::Array
+            )]))
         );
     }
 }

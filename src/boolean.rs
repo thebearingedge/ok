@@ -1,5 +1,5 @@
 use super::{
-    error::Result,
+    error::{ValidationError, ValidationResult},
     json::{Json, JsonType},
     OkSchema, Validator,
 };
@@ -37,8 +37,13 @@ impl OkSchema for BooleanSchema {
         self
     }
 
-    fn validate_at(&self, path: &str, value: Option<Json>) -> Result<Option<Json>> {
-        self.validator.exec(path, value)
+    fn validate_at(
+        &self,
+        path: &str,
+        value: Option<Json>,
+        all_errors: &mut Vec<ValidationError>,
+    ) -> ValidationResult<Option<Json>> {
+        self.validator.exec(path, value, all_errors)
     }
 }
 
@@ -48,7 +53,12 @@ pub fn boolean() -> BooleanSchema {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{boolean, error::type_error, json::JsonType, OkSchema};
+    use super::super::{
+        boolean,
+        error::{payload_error, type_error},
+        json::JsonType,
+        OkSchema,
+    };
     use serde_json::json;
 
     #[test]
@@ -63,27 +73,27 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!(null))),
-            Err(type_error("", JsonType::Boolean))
+            Err(payload_error(vec![type_error("", "", JsonType::Boolean)]))
         );
         assert_eq!(
             schema.validate(None),
-            Err(type_error("", JsonType::Boolean))
+            Err(payload_error(vec![type_error("", "", JsonType::Boolean)]))
         );
         assert_eq!(
             schema.validate(Some(json!([]))),
-            Err(type_error("", JsonType::Boolean))
+            Err(payload_error(vec![type_error("", "", JsonType::Boolean)]))
         );
         assert_eq!(
             schema.validate(Some(json!(1))),
-            Err(type_error("", JsonType::Boolean))
+            Err(payload_error(vec![type_error("", "", JsonType::Boolean)]))
         );
         assert_eq!(
             schema.validate(Some(json!({}))),
-            Err(type_error("", JsonType::Boolean))
+            Err(payload_error(vec![type_error("", "", JsonType::Boolean)]))
         );
         assert_eq!(
             schema.validate(Some(json!("foo"))),
-            Err(type_error("", JsonType::Boolean))
+            Err(payload_error(vec![type_error("", "", JsonType::Boolean)]))
         );
     }
 

@@ -1,4 +1,7 @@
-use super::{error::Result, json::Json};
+use super::{
+    error::{payload_error, Result, ValidationError, ValidationResult},
+    json::Json,
+};
 
 pub trait OkSchema {
     fn label(self, label: &'static str) -> Self
@@ -17,9 +20,18 @@ pub trait OkSchema {
     where
         Self: Sized;
 
-    fn validate_at(&self, path: &str, value: Option<Json>) -> Result<Option<Json>>;
+    fn validate_at(
+        &self,
+        path: &str,
+        value: Option<Json>,
+        all_errors: &mut Vec<ValidationError>,
+    ) -> ValidationResult<Option<Json>>;
 
     fn validate(&self, value: Option<Json>) -> Result<Option<Json>> {
-        self.validate_at("".into(), value)
+        let mut errors = vec![];
+        match self.validate_at("", value, &mut errors) {
+            Ok(value) => Ok(value),
+            Err(_) => Err(payload_error(errors)),
+        }
     }
 }

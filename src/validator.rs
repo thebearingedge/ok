@@ -1,12 +1,12 @@
 use super::{
-    error::{field_error, type_error, Result, ValidationError},
+    error::{type_error, Result, ValidationError, ValidationResult},
     json::{from_json, to_json, Json, JsonType},
     Test,
 };
 use serde::{de::DeserializeOwned, ser::Serialize};
 
 pub struct Validator<T: DeserializeOwned + Serialize> {
-    pub json_type: JsonType,
+    pub jsontype_: JsonType,
     pub label: Option<&'static str>,
     pub description: Option<&'static str>,
     pub is_optional: bool,
@@ -16,9 +16,9 @@ pub struct Validator<T: DeserializeOwned + Serialize> {
 }
 
 impl<T: DeserializeOwned + Serialize> Validator<T> {
-    pub fn new(json_type: JsonType) -> Self {
+    pub fn new(jsontype_: JsonType) -> Self {
         Validator {
-            json_type,
+            jsontype_,
             label: None,
             description: None,
             is_optional: false,
@@ -28,41 +28,47 @@ impl<T: DeserializeOwned + Serialize> Validator<T> {
         }
     }
 
-    pub fn add_test<M, V>(&mut self, message: M, test: V)
+    pub fn add_test<M, F>(&mut self, type_: &'static str, message: M, test: F)
     where
         M: Into<String>,
-        V: Fn(&T) -> Result<bool> + 'static,
+        F: Fn(&T) -> Result<bool> + 'static,
     {
-        self.tests.push(Test::new(message, test));
+        self.tests.push(Test::new(type_, message, test));
     }
 
     pub fn add_transform(&mut self, transform: fn(T) -> T) {
         self.transforms.push(transform);
     }
 
-    pub fn exec(&self, path: &str, value: Option<Json>) -> Result<Option<Json>> {
+    pub fn exec(
+        &self,
+        path: &str,
+        value: Option<Json>,
+        all_errors: &mut Vec<ValidationError>,
+    ) -> ValidationResult<Option<Json>> {
         let label = self.label.unwrap_or(path);
-        let json_type = self.json_type;
-        let coerce = match value {
+        let coersion = match value {
             None if self.is_optional => return Ok(None),
-            None => Err(type_error(label, json_type)),
-            Some(Json::Null) if self.is_nullable => return Ok(Some(Json::Null)),
-            Some(json) => json_type.coerce(label, json),
+            None => Err(type_error(path, label, self.jsontype_)),
+            Some(Json::Null) if self.is_nullable => return Ok(value),
+            Some(json) => self.jsontype_.coerce(path, label, json),
         };
-        coerce.and_then(|json| {
-            let t = self
-                .transforms
-                .iter()
-                .fold(from_json(json).unwrap(), |t, transform| transform(t));
-            let errors = self
-                .tests
-                .iter()
-                .filter_map(|test| test.check(label, &t).err())
-                .collect::<Vec<ValidationError>>();
-            if errors.is_empty() {
-                return Ok(Some(to_json(t).unwrap()));
-            }
-            Err(field_error(errors))
-        })
+        if coersion.is_err() {
+            return Err(all_errors.push(coersion.unwrap_err()));
+        }
+        let json = coersion.unwrap();
+        let t = self
+            .transforms
+            .iter()
+            .fold(from_json(json).unwrap(), |t, transform| transform(t));
+        let mut errors = self
+            .tests
+            .iter()
+            .filter_map(|test| test.check(path, label, &t).err())
+            .collect::<Vec<ValidationError>>();
+        if errors.is_empty() {
+            return Ok(Some(to_json(t).unwrap()));
+        }
+        Err(all_errors.append(&mut errors))
     }
 }

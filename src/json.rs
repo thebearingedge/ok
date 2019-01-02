@@ -22,7 +22,7 @@ pub enum JsonType {
 }
 
 impl JsonType {
-    pub fn coerce(&self, label: &str, json: Json) -> Result<Json> {
+    pub fn coerce(&self, path: &str, label: &str, json: Json) -> Result<Json> {
         match self {
             JsonType::Boolean => {
                 if json.is_boolean() {
@@ -32,10 +32,10 @@ impl JsonType {
                     return match json.as_str().unwrap() {
                         "true" => Ok(Json::Bool(true)),
                         "false" => Ok(Json::Bool(false)),
-                        _ => Err(type_error(label, JsonType::Boolean)),
+                        _ => Err(type_error(path, label, JsonType::Boolean)),
                     };
                 }
-                Err(type_error(label, JsonType::Boolean))
+                Err(type_error(path, label, JsonType::Boolean))
             }
             JsonType::Integer => {
                 if json.is_i64() {
@@ -59,7 +59,7 @@ impl JsonType {
                         return Ok(to_json(integer).unwrap());
                     }
                 }
-                Err(type_error(label, JsonType::Integer))
+                Err(type_error(path, label, JsonType::Integer))
             }
             JsonType::Unsigned => {
                 if json.is_u64() {
@@ -83,7 +83,7 @@ impl JsonType {
                         return Ok(to_json(unsigned).unwrap());
                     }
                 }
-                Err(type_error(label, JsonType::Unsigned))
+                Err(type_error(path, label, JsonType::Unsigned))
             }
             JsonType::Float => {
                 if json.is_f64() || json.is_i64() {
@@ -101,7 +101,7 @@ impl JsonType {
                         return Ok(to_json(float).unwrap());
                     }
                 }
-                Err(type_error(label, JsonType::Float))
+                Err(type_error(path, label, JsonType::Float))
             }
             JsonType::String => {
                 if json.is_string() {
@@ -110,19 +110,19 @@ impl JsonType {
                 if json.is_boolean() || json.is_number() {
                     return Ok(to_json(json.to_string()).unwrap());
                 }
-                Err(type_error(label, JsonType::String))
+                Err(type_error(path, label, JsonType::String))
             }
             JsonType::Array => {
                 if json.is_array() {
                     return Ok(json);
                 }
-                Err(type_error(label, JsonType::Array))
+                Err(type_error(path, label, JsonType::Array))
             }
             JsonType::Object => {
                 if json.is_object() {
                     return Ok(json);
                 }
-                Err(type_error(label, JsonType::Object))
+                Err(type_error(path, label, JsonType::Object))
             }
             _ => Ok(json),
         }
