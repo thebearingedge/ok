@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate serde_derive;
+
 #[cfg(test)]
 #[macro_use]
 extern crate pretty_assertions;

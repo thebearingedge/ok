@@ -6,7 +6,7 @@ use super::{
 use serde::{de::DeserializeOwned, ser::Serialize};
 
 pub struct Validator<T: DeserializeOwned + Serialize> {
-    pub jsontype_: JsonType,
+    pub json_type: JsonType,
     pub label: Option<&'static str>,
     pub description: Option<&'static str>,
     pub is_optional: bool,
@@ -16,9 +16,9 @@ pub struct Validator<T: DeserializeOwned + Serialize> {
 }
 
 impl<T: DeserializeOwned + Serialize> Validator<T> {
-    pub fn new(jsontype_: JsonType) -> Self {
+    pub fn new(json_type: JsonType) -> Self {
         Validator {
-            jsontype_,
+            json_type,
             label: None,
             description: None,
             is_optional: false,
@@ -49,9 +49,9 @@ impl<T: DeserializeOwned + Serialize> Validator<T> {
         let label = self.label.unwrap_or(path);
         let coersion = match value {
             None if self.is_optional => return Ok(None),
-            None => Err(type_error(path, label, self.jsontype_)),
+            None => Err(type_error(path, label, self.json_type)),
             Some(Json::Null) if self.is_nullable => return Ok(value),
-            Some(json) => self.jsontype_.coerce(path, label, json),
+            Some(json) => self.json_type.coerce(path, label, json),
         };
         if coersion.is_err() {
             return Err(all_errors.push(coersion.unwrap_err()));

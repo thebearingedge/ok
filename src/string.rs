@@ -122,7 +122,7 @@ pub fn string() -> StringSchema {
 #[cfg(test)]
 mod tests {
     use super::super::{
-        error::{payload_error, test_error, type_error},
+        error::{json_error, test_error, type_error},
         json::JsonType,
         string, OkSchema,
     };
@@ -137,19 +137,19 @@ mod tests {
         assert_eq!(schema.validate(Some(json!(1))), Ok(Some(json!("1"))));
         assert_eq!(
             schema.validate(Some(json!(null))),
-            Err(payload_error(vec![type_error("", "", JsonType::String)]))
+            Err(json_error(vec![type_error("", "", JsonType::String)]))
         );
         assert_eq!(
             schema.validate(None),
-            Err(payload_error(vec![type_error("", "", JsonType::String)]))
+            Err(json_error(vec![type_error("", "", JsonType::String)]))
         );
         assert_eq!(
             schema.validate(Some(json!([]))),
-            Err(payload_error(vec![type_error("", "", JsonType::String)]))
+            Err(json_error(vec![type_error("", "", JsonType::String)]))
         );
         assert_eq!(
             schema.validate(Some(json!({}))),
-            Err(payload_error(vec![type_error("", "", JsonType::String)]))
+            Err(json_error(vec![type_error("", "", JsonType::String)]))
         );
     }
 
@@ -173,7 +173,7 @@ mod tests {
         assert_eq!(schema.validate(Some(json!("foo"))), Ok(Some(json!("foo"))));
         assert_eq!(
             schema.validate(Some(json!(""))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "length",
                 "",
                 "My String must be between 1 and 3 characters long."
@@ -181,7 +181,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!("quux"))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "length",
                 "",
                 "My String must be between 1 and 3 characters long."
@@ -198,7 +198,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!("qux"))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "min_length",
                 "",
                 "My String must be at least 4 characters long."
@@ -212,7 +212,7 @@ mod tests {
         assert_eq!(schema.validate(Some(json!("qux"))), Ok(Some(json!("qux"))));
         assert_eq!(
             schema.validate(Some(json!("quux"))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "max_length",
                 "",
                 "My String must be at most 3 characters long."
@@ -229,7 +229,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!("Barfoo"))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "matches",
                 "",
                 "My String must match the pattern '(?i)^foo'."
@@ -247,7 +247,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!("Barfoo"))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "matches",
                 "",
                 "My String must match the pattern '(?i)^foo'."

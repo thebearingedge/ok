@@ -55,7 +55,7 @@ pub fn boolean() -> BooleanSchema {
 mod tests {
     use super::super::{
         boolean,
-        error::{payload_error, type_error},
+        error::{json_error, type_error},
         json::JsonType,
         OkSchema,
     };
@@ -73,27 +73,27 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!(null))),
-            Err(payload_error(vec![type_error("", "", JsonType::Boolean)]))
+            Err(json_error(vec![type_error("", "", JsonType::Boolean)]))
         );
         assert_eq!(
             schema.validate(None),
-            Err(payload_error(vec![type_error("", "", JsonType::Boolean)]))
+            Err(json_error(vec![type_error("", "", JsonType::Boolean)]))
         );
         assert_eq!(
             schema.validate(Some(json!([]))),
-            Err(payload_error(vec![type_error("", "", JsonType::Boolean)]))
+            Err(json_error(vec![type_error("", "", JsonType::Boolean)]))
         );
         assert_eq!(
             schema.validate(Some(json!(1))),
-            Err(payload_error(vec![type_error("", "", JsonType::Boolean)]))
+            Err(json_error(vec![type_error("", "", JsonType::Boolean)]))
         );
         assert_eq!(
             schema.validate(Some(json!({}))),
-            Err(payload_error(vec![type_error("", "", JsonType::Boolean)]))
+            Err(json_error(vec![type_error("", "", JsonType::Boolean)]))
         );
         assert_eq!(
             schema.validate(Some(json!("foo"))),
-            Err(payload_error(vec![type_error("", "", JsonType::Boolean)]))
+            Err(json_error(vec![type_error("", "", JsonType::Boolean)]))
         );
     }
 

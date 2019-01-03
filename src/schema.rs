@@ -1,5 +1,5 @@
 use super::{
-    error::{payload_error, Result, ValidationError, ValidationResult},
+    error::{json_error, Result, ValidationError, ValidationResult},
     json::Json,
 };
 
@@ -31,7 +31,7 @@ pub trait OkSchema {
         let mut errors = vec![];
         match self.validate_at("", value, &mut errors) {
             Ok(value) => Ok(value),
-            Err(_) => Err(payload_error(errors)),
+            Err(_) => Err(json_error(errors)),
         }
     }
 }

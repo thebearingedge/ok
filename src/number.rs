@@ -120,7 +120,7 @@ pub fn unsigned() -> NumberSchema<u64> {
 #[cfg(test)]
 mod tests {
     use super::super::{
-        error::{payload_error, test_error, type_error},
+        error::{json_error, test_error, type_error},
         float, integer,
         json::JsonType,
         unsigned, OkSchema,
@@ -138,35 +138,35 @@ mod tests {
         assert_eq!(schema.validate(Some(json!("-1"))), Ok(Some(json!(-1))));
         assert_eq!(
             schema.validate(Some(json!(1.1))),
-            Err(payload_error(vec![type_error("", "", JsonType::Integer)]))
+            Err(json_error(vec![type_error("", "", JsonType::Integer)]))
         );
         assert_eq!(
             schema.validate(Some(json!(std::i64::MAX as u64 + 1))),
-            Err(payload_error(vec![type_error("", "", JsonType::Integer)]))
+            Err(json_error(vec![type_error("", "", JsonType::Integer)]))
         );
         assert_eq!(
             schema.validate(Some(json!(null))),
-            Err(payload_error(vec![type_error("", "", JsonType::Integer)]))
+            Err(json_error(vec![type_error("", "", JsonType::Integer)]))
         );
         assert_eq!(
             schema.validate(None),
-            Err(payload_error(vec![type_error("", "", JsonType::Integer)]))
+            Err(json_error(vec![type_error("", "", JsonType::Integer)]))
         );
         assert_eq!(
             schema.validate(Some(json!([]))),
-            Err(payload_error(vec![type_error("", "", JsonType::Integer)]))
+            Err(json_error(vec![type_error("", "", JsonType::Integer)]))
         );
         assert_eq!(
             schema.validate(Some(json!(true))),
-            Err(payload_error(vec![type_error("", "", JsonType::Integer)]))
+            Err(json_error(vec![type_error("", "", JsonType::Integer)]))
         );
         assert_eq!(
             schema.validate(Some(json!({}))),
-            Err(payload_error(vec![type_error("", "", JsonType::Integer)]))
+            Err(json_error(vec![type_error("", "", JsonType::Integer)]))
         );
         assert_eq!(
             schema.validate(Some(json!("foo"))),
-            Err(payload_error(vec![type_error("", "", JsonType::Integer)]))
+            Err(json_error(vec![type_error("", "", JsonType::Integer)]))
         );
     }
 
@@ -178,39 +178,39 @@ mod tests {
         assert_eq!(schema.validate(Some(json!("1"))), Ok(Some(json!(1))));
         assert_eq!(
             schema.validate(Some(json!(1.1))),
-            Err(payload_error(vec![type_error("", "", JsonType::Unsigned)]))
+            Err(json_error(vec![type_error("", "", JsonType::Unsigned)]))
         );
         assert_eq!(
             schema.validate(Some(json!(-1.0))),
-            Err(payload_error(vec![type_error("", "", JsonType::Unsigned)]))
+            Err(json_error(vec![type_error("", "", JsonType::Unsigned)]))
         );
         assert_eq!(
             schema.validate(Some(json!(-1))),
-            Err(payload_error(vec![type_error("", "", JsonType::Unsigned)]))
+            Err(json_error(vec![type_error("", "", JsonType::Unsigned)]))
         );
         assert_eq!(
             schema.validate(Some(json!(null))),
-            Err(payload_error(vec![type_error("", "", JsonType::Unsigned)]))
+            Err(json_error(vec![type_error("", "", JsonType::Unsigned)]))
         );
         assert_eq!(
             schema.validate(None),
-            Err(payload_error(vec![type_error("", "", JsonType::Unsigned)]))
+            Err(json_error(vec![type_error("", "", JsonType::Unsigned)]))
         );
         assert_eq!(
             schema.validate(Some(json!([]))),
-            Err(payload_error(vec![type_error("", "", JsonType::Unsigned)]))
+            Err(json_error(vec![type_error("", "", JsonType::Unsigned)]))
         );
         assert_eq!(
             schema.validate(Some(json!(true))),
-            Err(payload_error(vec![type_error("", "", JsonType::Unsigned)]))
+            Err(json_error(vec![type_error("", "", JsonType::Unsigned)]))
         );
         assert_eq!(
             schema.validate(Some(json!({}))),
-            Err(payload_error(vec![type_error("", "", JsonType::Unsigned)]))
+            Err(json_error(vec![type_error("", "", JsonType::Unsigned)]))
         );
         assert_eq!(
             schema.validate(Some(json!("foo"))),
-            Err(payload_error(vec![type_error("", "", JsonType::Unsigned)]))
+            Err(json_error(vec![type_error("", "", JsonType::Unsigned)]))
         );
     }
 
@@ -227,31 +227,31 @@ mod tests {
         assert_eq!(schema.validate(Some(json!("-1.0"))), Ok(Some(json!(-1.0))));
         assert_eq!(
             schema.validate(Some(json!(std::i64::MAX as u64 + 1))),
-            Err(payload_error(vec![type_error("", "", JsonType::Float)]))
+            Err(json_error(vec![type_error("", "", JsonType::Float)]))
         );
         assert_eq!(
             schema.validate(Some(json!(null))),
-            Err(payload_error(vec![type_error("", "", JsonType::Float)]))
+            Err(json_error(vec![type_error("", "", JsonType::Float)]))
         );
         assert_eq!(
             schema.validate(None),
-            Err(payload_error(vec![type_error("", "", JsonType::Float)]))
+            Err(json_error(vec![type_error("", "", JsonType::Float)]))
         );
         assert_eq!(
             schema.validate(Some(json!([]))),
-            Err(payload_error(vec![type_error("", "", JsonType::Float)]))
+            Err(json_error(vec![type_error("", "", JsonType::Float)]))
         );
         assert_eq!(
             schema.validate(Some(json!(true))),
-            Err(payload_error(vec![type_error("", "", JsonType::Float)]))
+            Err(json_error(vec![type_error("", "", JsonType::Float)]))
         );
         assert_eq!(
             schema.validate(Some(json!({}))),
-            Err(payload_error(vec![type_error("", "", JsonType::Float)]))
+            Err(json_error(vec![type_error("", "", JsonType::Float)]))
         );
         assert_eq!(
             schema.validate(Some(json!("foo"))),
-            Err(payload_error(vec![type_error("", "", JsonType::Float)]))
+            Err(json_error(vec![type_error("", "", JsonType::Float)]))
         );
     }
 
@@ -285,7 +285,7 @@ mod tests {
         assert_eq!(f.validate(Some(json!(6.0))), Ok(Some(json!(6.0))));
         assert_eq!(
             u.validate(Some(json!(4))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "min",
                 "",
                 "u64 must be at least 5."
@@ -293,7 +293,7 @@ mod tests {
         );
         assert_eq!(
             i.validate(Some(json!(4))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "min",
                 "",
                 "i64 must be at least 5."
@@ -301,7 +301,7 @@ mod tests {
         );
         assert_eq!(
             f.validate(Some(json!(4.0))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "min",
                 "",
                 "f64 must be at least 5."
@@ -319,7 +319,7 @@ mod tests {
         assert_eq!(f.validate(Some(json!(4.0))), Ok(Some(json!(4.0))));
         assert_eq!(
             u.validate(Some(json!(6))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "max",
                 "",
                 "u64 must be at most 5."
@@ -327,7 +327,7 @@ mod tests {
         );
         assert_eq!(
             i.validate(Some(json!(6))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "max",
                 "",
                 "i64 must be at most 5."
@@ -335,7 +335,7 @@ mod tests {
         );
         assert_eq!(
             f.validate(Some(json!(6.0))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "max",
                 "",
                 "f64 must be at most 5."
@@ -353,7 +353,7 @@ mod tests {
         assert_eq!(f.validate(Some(json!(6.0))), Ok(Some(json!(6.0))));
         assert_eq!(
             u.validate(Some(json!(5))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "greater_than",
                 "",
                 "u64 must be greater than 5."
@@ -361,7 +361,7 @@ mod tests {
         );
         assert_eq!(
             i.validate(Some(json!(5))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "greater_than",
                 "",
                 "i64 must be greater than 5."
@@ -369,7 +369,7 @@ mod tests {
         );
         assert_eq!(
             f.validate(Some(json!(5.0))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "greater_than",
                 "",
                 "f64 must be greater than 5."
@@ -387,7 +387,7 @@ mod tests {
         assert_eq!(f.validate(Some(json!(4.0))), Ok(Some(json!(4.0))));
         assert_eq!(
             u.validate(Some(json!(5))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "less_than",
                 "",
                 "u64 must be less than 5."
@@ -395,7 +395,7 @@ mod tests {
         );
         assert_eq!(
             i.validate(Some(json!(5))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "less_than",
                 "",
                 "i64 must be less than 5."
@@ -403,7 +403,7 @@ mod tests {
         );
         assert_eq!(
             f.validate(Some(json!(5.0))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "less_than",
                 "",
                 "f64 must be less than 5."

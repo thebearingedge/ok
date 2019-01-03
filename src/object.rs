@@ -124,7 +124,7 @@ pub fn object() -> ObjectSchema {
 #[cfg(test)]
 mod tests {
     use super::super::{
-        error::{payload_error, type_error},
+        error::{json_error, type_error},
         json::JsonType,
         object, OkSchema,
     };
@@ -136,27 +136,27 @@ mod tests {
         assert_eq!(schema.validate(Some(json!({}))), Ok(Some(json!({}))));
         assert_eq!(
             schema.validate(Some(json!(null))),
-            Err(payload_error(vec![type_error("", "", JsonType::Object)]))
+            Err(json_error(vec![type_error("", "", JsonType::Object)]))
         );
         assert_eq!(
             schema.validate(None),
-            Err(payload_error(vec![type_error("", "", JsonType::Object)]))
+            Err(json_error(vec![type_error("", "", JsonType::Object)]))
         );
         assert_eq!(
             schema.validate(Some(json!([]))),
-            Err(payload_error(vec![type_error("", "", JsonType::Object)]))
+            Err(json_error(vec![type_error("", "", JsonType::Object)]))
         );
         assert_eq!(
             schema.validate(Some(json!(1))),
-            Err(payload_error(vec![type_error("", "", JsonType::Object)]))
+            Err(json_error(vec![type_error("", "", JsonType::Object)]))
         );
         assert_eq!(
             schema.validate(Some(json!(true))),
-            Err(payload_error(vec![type_error("", "", JsonType::Object)]))
+            Err(json_error(vec![type_error("", "", JsonType::Object)]))
         );
         assert_eq!(
             schema.validate(Some(json!("foo"))),
-            Err(payload_error(vec![type_error("", "", JsonType::Object)]))
+            Err(json_error(vec![type_error("", "", JsonType::Object)]))
         );
     }
 
@@ -183,7 +183,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!({ "foo": "bar" }))),
-            Err(payload_error(vec![type_error(
+            Err(json_error(vec![type_error(
                 "foo",
                 "foo",
                 JsonType::Boolean
@@ -200,7 +200,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!({ "foo": "" }))),
-            Err(payload_error(vec![type_error(
+            Err(json_error(vec![type_error(
                 "foo",
                 "foo",
                 JsonType::Integer
@@ -214,11 +214,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!({ "foo": "" }))),
-            Err(payload_error(vec![type_error(
-                "foo",
-                "foo",
-                JsonType::Float
-            )]))
+            Err(json_error(vec![type_error("foo", "foo", JsonType::Float)]))
         );
 
         let schema = object().unsigned("foo", |field| field.desc("An unsigned."));
@@ -228,7 +224,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!({ "foo": "" }))),
-            Err(payload_error(vec![type_error(
+            Err(json_error(vec![type_error(
                 "foo",
                 "foo",
                 JsonType::Unsigned
@@ -245,11 +241,9 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!({ "foo": null }))),
-            Err(payload_error(vec![type_error(
-                "foo",
-                "foo",
-                JsonType::String
-            ),]))
+            Err(json_error(
+                vec![type_error("foo", "foo", JsonType::String),]
+            ))
         );
     }
 
@@ -262,11 +256,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!({ "foo": true }))),
-            Err(payload_error(vec![type_error(
-                "foo",
-                "foo",
-                JsonType::Object
-            )]))
+            Err(json_error(vec![type_error("foo", "foo", JsonType::Object)]))
         );
     }
 
@@ -279,11 +269,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!({ "foo": true }))),
-            Err(payload_error(vec![type_error(
-                "foo",
-                "foo",
-                JsonType::Array
-            )]))
+            Err(json_error(vec![type_error("foo", "foo", JsonType::Array)]))
         );
     }
 }

@@ -119,7 +119,7 @@ pub fn array() -> ArraySchema {
 mod tests {
     use super::super::{
         array, boolean,
-        error::{payload_error, test_error, type_error},
+        error::{json_error, test_error, type_error},
         integer,
         json::JsonType,
         object, string, OkSchema,
@@ -132,27 +132,27 @@ mod tests {
         assert_eq!(schema.validate(Some(json!([]))), Ok(Some(json!([]))));
         assert_eq!(
             schema.validate(Some(json!(null))),
-            Err(payload_error(vec![type_error("", "", JsonType::Array)]))
+            Err(json_error(vec![type_error("", "", JsonType::Array)]))
         );
         assert_eq!(
             schema.validate(None),
-            Err(payload_error(vec![type_error("", "", JsonType::Array)]))
+            Err(json_error(vec![type_error("", "", JsonType::Array)]))
         );
         assert_eq!(
             schema.validate(Some(json!({}))),
-            Err(payload_error(vec![type_error("", "", JsonType::Array)]))
+            Err(json_error(vec![type_error("", "", JsonType::Array)]))
         );
         assert_eq!(
             schema.validate(Some(json!(1))),
-            Err(payload_error(vec![type_error("", "", JsonType::Array)]))
+            Err(json_error(vec![type_error("", "", JsonType::Array)]))
         );
         assert_eq!(
             schema.validate(Some(json!(true))),
-            Err(payload_error(vec![type_error("", "", JsonType::Array)]))
+            Err(json_error(vec![type_error("", "", JsonType::Array)]))
         );
         assert_eq!(
             schema.validate(Some(json!("foo"))),
-            Err(payload_error(vec![type_error("", "", JsonType::Array)]))
+            Err(json_error(vec![type_error("", "", JsonType::Array)]))
         );
     }
 
@@ -179,7 +179,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!([]))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "length",
                 "",
                 "My Array must have length between 1 and 3."
@@ -187,7 +187,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz", "qux"]))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "length",
                 "",
                 "My Array must have length between 1 and 3."
@@ -204,7 +204,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!(["foo"]))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "min_length",
                 "",
                 "My Array must contain at least 4 elements."
@@ -221,7 +221,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz", "qux"]))),
-            Err(payload_error(vec![test_error(
+            Err(json_error(vec![test_error(
                 "max_length",
                 "",
                 "My Array may contain at most 3 elements."
@@ -238,7 +238,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!([1, 2, 3]))),
-            Err(payload_error(vec![
+            Err(json_error(vec![
                 type_error("[0]", "[0]", JsonType::Boolean),
                 type_error("[1]", "[1]", JsonType::Boolean),
                 type_error("[2]", "[2]", JsonType::Boolean)
@@ -255,7 +255,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz"]))),
-            Err(payload_error(vec![
+            Err(json_error(vec![
                 type_error("[0]", "[0]", JsonType::Integer),
                 type_error("[1]", "[1]", JsonType::Integer),
                 type_error("[2]", "[2]", JsonType::Integer)
@@ -272,7 +272,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!([null, null, null]))),
-            Err(payload_error(vec![
+            Err(json_error(vec![
                 type_error("[0]", "[0]", JsonType::String),
                 type_error("[1]", "[1]", JsonType::String),
                 type_error("[2]", "[2]", JsonType::String)
@@ -289,7 +289,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!(["foo", "bar", "baz"]))),
-            Err(payload_error(vec![
+            Err(json_error(vec![
                 type_error("[0]", "[0]", JsonType::Object),
                 type_error("[1]", "[1]", JsonType::Object),
                 type_error("[2]", "[2]", JsonType::Object)
@@ -306,7 +306,7 @@ mod tests {
         );
         assert_eq!(
             schema.validate(Some(json!([1, 2, 3]))),
-            Err(payload_error(vec![
+            Err(json_error(vec![
                 type_error("[0]", "[0]", JsonType::Array),
                 type_error("[1]", "[1]", JsonType::Array),
                 type_error("[2]", "[2]", JsonType::Array)
