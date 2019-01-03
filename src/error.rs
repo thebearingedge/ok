@@ -1,4 +1,5 @@
 use super::json::JsonType;
+use serde::Serialize;
 
 #[derive(Debug, PartialEq, Serialize)]
 pub struct ValidationError {
