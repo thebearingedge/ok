@@ -16,9 +16,9 @@ impl<N> NumberSchema<N>
 where
     N: Serialize + DeserializeOwned + PartialOrd + std::fmt::Display,
 {
-    pub fn new(jsontype_: JsonType) -> Self {
+    pub fn new(json_type: JsonType) -> Self {
         NumberSchema {
-            validator: Validator::new(jsontype_),
+            validator: Validator::new(json_type),
         }
     }
 
