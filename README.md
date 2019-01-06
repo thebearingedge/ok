@@ -1,5 +1,6 @@
 ok
 --
+[![Build Status](https://travis-ci.org/thebearingedge/ok.svg?branch=master)](https://travis-ci.org/thebearingedge/ok)
 
 👌 Alright JSON Object validation.
 
