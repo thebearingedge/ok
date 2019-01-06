@@ -64,50 +64,29 @@ mod tests {
     #[test]
     fn it_validates_booleans() {
         let schema = boolean();
-        assert_eq!(schema.validate(Some(json!(true))), Ok(Some(json!(true))));
-        assert_eq!(schema.validate(Some(json!(false))), Ok(Some(json!(false))));
-        assert_eq!(schema.validate(Some(json!("true"))), Ok(Some(json!(true))));
+        assert_eq!(schema.validate(json!(true)), Ok(json!(true)));
+        assert_eq!(schema.validate(json!(false)), Ok(json!(false)));
+        assert_eq!(schema.validate(json!("true")), Ok(json!(true)));
+        assert_eq!(schema.validate(json!("false")), Ok(json!(false)));
         assert_eq!(
-            schema.validate(Some(json!("false"))),
-            Ok(Some(json!(false)))
-        );
-        assert_eq!(
-            schema.validate(Some(json!(null))),
+            schema.validate(json!(null)),
             Err(json_error(vec![type_error("", "", JsonType::Boolean)]))
         );
         assert_eq!(
-            schema.validate(None),
+            schema.validate(json!([])),
             Err(json_error(vec![type_error("", "", JsonType::Boolean)]))
         );
         assert_eq!(
-            schema.validate(Some(json!([]))),
+            schema.validate(json!(1)),
             Err(json_error(vec![type_error("", "", JsonType::Boolean)]))
         );
         assert_eq!(
-            schema.validate(Some(json!(1))),
+            schema.validate(json!({})),
             Err(json_error(vec![type_error("", "", JsonType::Boolean)]))
         );
         assert_eq!(
-            schema.validate(Some(json!({}))),
+            schema.validate(json!("foo")),
             Err(json_error(vec![type_error("", "", JsonType::Boolean)]))
         );
-        assert_eq!(
-            schema.validate(Some(json!("foo"))),
-            Err(json_error(vec![type_error("", "", JsonType::Boolean)]))
-        );
-    }
-
-    #[test]
-    fn it_validates_optional_booleans() {
-        let schema = boolean().optional();
-        assert_eq!(schema.validate(Some(json!(true))), Ok(Some(json!(true))));
-        assert_eq!(schema.validate(None), Ok(None));
-    }
-
-    #[test]
-    fn it_validates_nullable_booleans() {
-        let schema = boolean().nullable();
-        assert_eq!(schema.validate(Some(json!(true))), Ok(Some(json!(true))));
-        assert_eq!(schema.validate(Some(json!(null))), Ok(Some(json!(null))));
     }
 }

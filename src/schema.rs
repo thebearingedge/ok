@@ -27,10 +27,10 @@ pub trait OkSchema {
         all_errors: &mut Vec<ValidationError>,
     ) -> ValidationResult<Option<Json>>;
 
-    fn validate(&self, value: Option<Json>) -> Result<Option<Json>> {
+    fn validate(&self, json: Json) -> Result<Json> {
         let mut errors = vec![];
-        match self.validate_at("", value, &mut errors) {
-            Ok(value) => Ok(value),
+        match self.validate_at("", Some(json), &mut errors) {
+            Ok(value) => Ok(value.unwrap()),
             Err(_) => Err(json_error(errors)),
         }
     }

@@ -133,56 +133,38 @@ mod tests {
     #[test]
     fn it_validates_objects() {
         let schema = object();
-        assert_eq!(schema.validate(Some(json!({}))), Ok(Some(json!({}))));
+        assert_eq!(schema.validate(json!({})), Ok(json!({})));
         assert_eq!(
-            schema.validate(Some(json!(null))),
+            schema.validate(json!(null)),
             Err(json_error(vec![type_error("", "", JsonType::Object)]))
         );
         assert_eq!(
-            schema.validate(None),
+            schema.validate(json!([])),
             Err(json_error(vec![type_error("", "", JsonType::Object)]))
         );
         assert_eq!(
-            schema.validate(Some(json!([]))),
+            schema.validate(json!(1)),
             Err(json_error(vec![type_error("", "", JsonType::Object)]))
         );
         assert_eq!(
-            schema.validate(Some(json!(1))),
+            schema.validate(json!(true)),
             Err(json_error(vec![type_error("", "", JsonType::Object)]))
         );
         assert_eq!(
-            schema.validate(Some(json!(true))),
+            schema.validate(json!("foo")),
             Err(json_error(vec![type_error("", "", JsonType::Object)]))
         );
-        assert_eq!(
-            schema.validate(Some(json!("foo"))),
-            Err(json_error(vec![type_error("", "", JsonType::Object)]))
-        );
-    }
-
-    #[test]
-    fn it_validates_optional_objects() {
-        let schema = object().optional();
-        assert_eq!(schema.validate(Some(json!({}))), Ok(Some(json!({}))));
-        assert_eq!(schema.validate(None), Ok(None));
-    }
-
-    #[test]
-    fn it_validates_nullable_objects() {
-        let schema = object().nullable();
-        assert_eq!(schema.validate(Some(json!({}))), Ok(Some(json!({}))));
-        assert_eq!(schema.validate(Some(json!(null))), Ok(Some(json!(null))));
     }
 
     #[test]
     fn it_validates_boolean_fields() {
         let schema = object().boolean("foo", |field| field.desc("A Boolean value."));
         assert_eq!(
-            schema.validate(Some(json!({ "foo": true }))),
-            Ok(Some(json!({ "foo": true })))
+            schema.validate(json!({ "foo": true })),
+            Ok(json!({ "foo": true }))
         );
         assert_eq!(
-            schema.validate(Some(json!({ "foo": "bar" }))),
+            schema.validate(json!({ "foo": "bar" })),
             Err(json_error(vec![type_error(
                 "foo",
                 "foo",
@@ -195,11 +177,11 @@ mod tests {
     fn it_validates_number_fields() {
         let schema = object().integer("foo", |field| field.desc("An integer."));
         assert_eq!(
-            schema.validate(Some(json!({ "foo": 1 }))),
-            Ok(Some(json!({ "foo": 1 })))
+            schema.validate(json!({ "foo": 1 })),
+            Ok(json!({ "foo": 1 }))
         );
         assert_eq!(
-            schema.validate(Some(json!({ "foo": "" }))),
+            schema.validate(json!({ "foo": "" })),
             Err(json_error(vec![type_error(
                 "foo",
                 "foo",
@@ -209,21 +191,21 @@ mod tests {
 
         let schema = object().float("foo", |field| field.desc("A float."));
         assert_eq!(
-            schema.validate(Some(json!({ "foo": 1.0 }))),
-            Ok(Some(json!({ "foo": 1.0 })))
+            schema.validate(json!({ "foo": 1.0 })),
+            Ok(json!({ "foo": 1.0 }))
         );
         assert_eq!(
-            schema.validate(Some(json!({ "foo": "" }))),
+            schema.validate(json!({ "foo": "" })),
             Err(json_error(vec![type_error("foo", "foo", JsonType::Float)]))
         );
 
         let schema = object().unsigned("foo", |field| field.desc("An unsigned."));
         assert_eq!(
-            schema.validate(Some(json!({ "foo": 1 }))),
-            Ok(Some(json!({ "foo": 1 })))
+            schema.validate(json!({ "foo": 1 })),
+            Ok(json!({ "foo": 1 }))
         );
         assert_eq!(
-            schema.validate(Some(json!({ "foo": "" }))),
+            schema.validate(json!({ "foo": "" })),
             Err(json_error(vec![type_error(
                 "foo",
                 "foo",
@@ -236,11 +218,11 @@ mod tests {
     fn it_validates_string_fields() {
         let schema = object().string("foo", |field| field.desc("A String value."));
         assert_eq!(
-            schema.validate(Some(json!({ "foo": "bar" }))),
-            Ok(Some(json!({ "foo": "bar" })))
+            schema.validate(json!({ "foo": "bar" })),
+            Ok(json!({ "foo": "bar" }))
         );
         assert_eq!(
-            schema.validate(Some(json!({ "foo": null }))),
+            schema.validate(json!({ "foo": null })),
             Err(json_error(
                 vec![type_error("foo", "foo", JsonType::String),]
             ))
@@ -251,11 +233,11 @@ mod tests {
     fn it_validates_object_fields() {
         let schema = object().object("foo", |field| field.desc("A nested Object."));
         assert_eq!(
-            schema.validate(Some(json!({ "foo": {} }))),
-            Ok(Some(json!({ "foo": {} })))
+            schema.validate(json!({ "foo": {} })),
+            Ok(json!({ "foo": {} }))
         );
         assert_eq!(
-            schema.validate(Some(json!({ "foo": true }))),
+            schema.validate(json!({ "foo": true })),
             Err(json_error(vec![type_error("foo", "foo", JsonType::Object)]))
         );
     }
@@ -264,11 +246,11 @@ mod tests {
     fn it_validates_array_fields() {
         let schema = object().array("foo", |field| field.desc("A nested Object."));
         assert_eq!(
-            schema.validate(Some(json!({ "foo": [] }))),
-            Ok(Some(json!({ "foo": [] })))
+            schema.validate(json!({ "foo": [] })),
+            Ok(json!({ "foo": [] }))
         );
         assert_eq!(
-            schema.validate(Some(json!({ "foo": true }))),
+            schema.validate(json!({ "foo": true })),
             Err(json_error(vec![type_error("foo", "foo", JsonType::Array)]))
         );
     }
